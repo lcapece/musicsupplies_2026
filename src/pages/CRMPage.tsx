@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -359,7 +359,11 @@ const CustomerListItem: React.FC<{
   isSelected: boolean;
   onClick: () => void;
   hasCallback?: boolean;
-}> = ({ account, isSelected, onClick, hasCallback }) => {
+  healthScore?: number;
+}> = ({ account, isSelected, onClick, hasCallback, healthScore }) => {
+  // Get churn-based background color
+  const churnColor = getChurnBackgroundColor(healthScore);
+
   return (
     <button
       onClick={onClick}
@@ -367,9 +371,10 @@ const CustomerListItem: React.FC<{
         w-full text-left px-4 py-3 relative
         transition-all duration-150 ease-out group
         focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500
+        border-l-[3px]
         ${isSelected
-          ? 'bg-indigo-50 border-l-[3px] border-l-indigo-600'
-          : 'hover:bg-gray-50 border-l-[3px] border-l-transparent'
+          ? 'bg-indigo-50 border-l-indigo-600'
+          : churnColor || 'hover:bg-gray-50 border-l-transparent'
         }
       `}
     >
@@ -496,7 +501,6 @@ const ActivityTab: React.FC<{
 }> = ({ accountNumber, staffUsername }) => {
   const [calls, setCalls] = useState<CallRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showNewCall, setShowNewCall] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [newCall, setNewCall] = useState({
@@ -555,7 +559,6 @@ const ActivityTab: React.FC<{
       if (error) throw error;
 
       setNewCall({ outcome: 'answered', notes: '', callbackDate: '', callbackTime: '', callbackReason: '' });
-      setShowNewCall(false);
       loadCalls();
     } catch (err) {
       console.error('Error saving call:', err);
@@ -578,176 +581,159 @@ const ActivityTab: React.FC<{
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900">Activity Log</h3>
-          <p className="text-xs text-gray-500 mt-0.5">{calls.length} recorded</p>
+      {/* New Activity Form - Always Visible */}
+      <div className="px-5 py-4 bg-gray-50 border-b border-gray-200 flex-shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">Log New Activity</h3>
+            <p className="text-xs text-gray-500 mt-0.5">{calls.length} recorded</p>
+          </div>
         </div>
-        <button
-          onClick={() => setShowNewCall(!showNewCall)}
-          className={`
-            inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-            transition-all duration-150
-            focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500
-            ${showNewCall
-              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'
-            }
-          `}
-        >
-          {showNewCall ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          {showNewCall ? 'Cancel' : 'Log Activity'}
-        </button>
-      </div>
 
-      {/* New Call Form */}
-      {showNewCall && (
-        <div className="px-5 py-4 bg-gray-50 border-b border-gray-100 flex-shrink-0">
-          <div className="space-y-4">
-            {/* Outcome Selection */}
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-2">Outcome</label>
-              <div className="flex flex-wrap gap-2">
-                {(['answered', 'voicemail', 'no_answer', 'busy', 'email'] as const).map(outcome => (
+        <div className="space-y-4">
+          {/* Outcome Selection */}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-2">Outcome</label>
+            <div className="flex flex-wrap gap-2">
+              {(['answered', 'voicemail', 'no_answer', 'busy', 'email'] as const).map(outcome => (
+                <button
+                  key={outcome}
+                  onClick={() => setNewCall(prev => ({ ...prev, outcome }))}
+                  className={`
+                    px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500
+                    ${newCall.outcome === outcome
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'bg-white text-gray-600 ring-1 ring-gray-300 hover:ring-gray-400'
+                    }
+                  `}
+                >
+                  {outcome.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-2">Notes</label>
+            <textarea
+              value={newCall.notes}
+              onChange={e => setNewCall(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="What was discussed? Key takeaways, action items..."
+              rows={3}
+              className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                placeholder:text-gray-400 resize-none transition-shadow"
+            />
+          </div>
+
+          {/* Callback Scheduling */}
+          <div className="p-4 bg-white rounded-lg border border-gray-200">
+            <label className="flex items-center gap-2 text-xs font-medium text-gray-700 mb-3">
+              <Calendar className="w-3.5 h-3.5 text-gray-500" />
+              Schedule Callback (Optional)
+            </label>
+
+            {/* Quick Callback Buttons */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {[
+                { label: 'Tomorrow', days: 1 },
+                { label: '2 Days', days: 2 },
+                { label: '1 Week', days: 7 },
+                { label: '2 Weeks', days: 14 },
+                { label: '1 Month', days: 30 }
+              ].map(option => {
+                const futureDate = new Date();
+                futureDate.setDate(futureDate.getDate() + option.days);
+                const dateStr = futureDate.toISOString().split('T')[0];
+                const isSelected = newCall.callbackDate === dateStr;
+
+                return (
                   <button
-                    key={outcome}
-                    onClick={() => setNewCall(prev => ({ ...prev, outcome }))}
+                    key={option.label}
+                    type="button"
+                    onClick={() => setNewCall(prev => ({
+                      ...prev,
+                      callbackDate: isSelected ? '' : dateStr,
+                      callbackTime: isSelected ? '' : (prev.callbackTime || '09:00')
+                    }))}
                     className={`
-                      px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150
-                      focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500
-                      ${newCall.outcome === outcome
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'bg-white text-gray-600 ring-1 ring-gray-300 hover:ring-gray-400'
+                      px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150
+                      ${isSelected
+                        ? 'bg-indigo-100 text-indigo-700 ring-1 ring-indigo-600/30'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }
                     `}
                   >
-                    {outcome.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                    {option.label}
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
 
-            {/* Notes */}
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-2">Notes</label>
-              <textarea
-                value={newCall.notes}
-                onChange={e => setNewCall(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="What was discussed? Key takeaways, action items..."
-                rows={3}
-                className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm
-                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                  placeholder:text-gray-400 resize-none transition-shadow"
-              />
-            </div>
-
-            {/* Callback Scheduling */}
-            <div className="p-4 bg-white rounded-lg border border-gray-200">
-              <label className="flex items-center gap-2 text-xs font-medium text-gray-700 mb-3">
-                <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                Schedule Callback (Optional)
-              </label>
-
-              {/* Quick Callback Buttons */}
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {[
-                  { label: 'Tomorrow', days: 1 },
-                  { label: '2 Days', days: 2 },
-                  { label: '1 Week', days: 7 },
-                  { label: '2 Weeks', days: 14 },
-                  { label: '1 Month', days: 30 }
-                ].map(option => {
-                  const futureDate = new Date();
-                  futureDate.setDate(futureDate.getDate() + option.days);
-                  const dateStr = futureDate.toISOString().split('T')[0];
-                  const isSelected = newCall.callbackDate === dateStr;
-
-                  return (
-                    <button
-                      key={option.label}
-                      type="button"
-                      onClick={() => setNewCall(prev => ({
-                        ...prev,
-                        callbackDate: isSelected ? '' : dateStr,
-                        callbackTime: isSelected ? '' : (prev.callbackTime || '09:00')
-                      }))}
-                      className={`
-                        px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150
-                        ${isSelected
-                          ? 'bg-indigo-100 text-indigo-700 ring-1 ring-indigo-600/30'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }
-                      `}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="date"
-                  value={newCall.callbackDate}
-                  onChange={e => setNewCall(prev => ({ ...prev, callbackDate: e.target.value }))}
-                  className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm
-                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-                <input
-                  type="time"
-                  value={newCall.callbackTime}
-                  onChange={e => setNewCall(prev => ({ ...prev, callbackTime: e.target.value }))}
-                  className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm
-                    focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-              </div>
+            <div className="grid grid-cols-2 gap-2">
               <input
-                type="text"
-                value={newCall.callbackReason}
-                onChange={e => setNewCall(prev => ({ ...prev, callbackReason: e.target.value }))}
-                placeholder="Callback reason..."
-                className="w-full mt-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm
-                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400"
+                type="date"
+                value={newCall.callbackDate}
+                onChange={e => setNewCall(prev => ({ ...prev, callbackDate: e.target.value }))}
+                className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <input
+                type="time"
+                value={newCall.callbackTime}
+                onChange={e => setNewCall(prev => ({ ...prev, callbackTime: e.target.value }))}
+                className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
-
-            {/* Save Button */}
-            <button
-              onClick={handleSaveCall}
-              disabled={saving || !newCall.notes.trim()}
-              className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium text-sm
-                hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed
-                shadow-sm transition-all duration-150 flex items-center justify-center gap-2
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Save Activity
-                </>
-              )}
-            </button>
+            <input
+              type="text"
+              value={newCall.callbackReason}
+              onChange={e => setNewCall(prev => ({ ...prev, callbackReason: e.target.value }))}
+              placeholder="Callback reason..."
+              className="w-full mt-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm
+                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400"
+            />
           </div>
-        </div>
-      )}
 
-      {/* Activity List */}
+          {/* Save Button */}
+          <button
+            onClick={handleSaveCall}
+            disabled={saving || !newCall.notes.trim()}
+            className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium text-sm
+              hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed
+              shadow-sm transition-all duration-150 flex items-center justify-center gap-2
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                Save Activity
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Activity History List */}
       <div className="flex-1 overflow-y-auto min-h-0">
         {loading ? (
           <ActivitySkeleton />
         ) : calls.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
-              <FileText className="w-8 h-8 text-gray-400" />
+            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center mb-4">
+              <Activity className="w-8 h-8 text-gray-400" />
             </div>
-            <h4 className="text-sm font-medium text-gray-900 mb-1">No activity yet</h4>
-            <p className="text-xs text-gray-500 max-w-[200px]">Log your first call or interaction to start tracking</p>
+            <p className="text-sm text-gray-500 max-w-[280px]">
+              No activity recorded yet. Use the form above to log your first interaction.
+            </p>
           </div>
         ) : (
           <div className="p-5 space-y-3">
@@ -1014,12 +1000,23 @@ const ContactsTab: React.FC<{
             <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
           </div>
         ) : contacts.length === 0 && !primaryContact ? (
-          <div className="flex flex-col items-center justify-center h-32 text-center">
-            <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-3">
-              <Users className="w-6 h-6 text-gray-400" />
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center mb-5 shadow-sm">
+              <Users className="w-10 h-10 text-purple-500" />
             </div>
-            <p className="text-sm font-medium text-gray-600">No contacts yet</p>
-            <p className="text-xs text-gray-400 mt-1">Add your first contact above</p>
+            <h4 className="text-base font-semibold text-gray-900 mb-2">No Contacts Added</h4>
+            <p className="text-sm text-gray-500 max-w-[280px] mb-5">
+              Keep track of everyone at this company. Add contacts with their roles, phone numbers, and email addresses.
+            </p>
+            <button
+              onClick={() => setShowAdd(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 text-white rounded-lg font-medium text-sm
+                hover:bg-purple-700 shadow-sm transition-all duration-150
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500"
+            >
+              <UserPlus className="w-4 h-4" />
+              Add First Contact
+            </button>
           </div>
         ) : (
           contacts.map(contact => (
@@ -1199,13 +1196,24 @@ const StatsTab: React.FC<{ accountNumber: number }> = ({ accountNumber }) => {
   if (!accountHealth) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-8">
-        <div className="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center mb-5">
-          <AlertCircle className="w-10 h-10 text-gray-400" />
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center mb-5 shadow-sm">
+          <BarChart3 className="w-10 h-10 text-blue-500" />
         </div>
-        <h3 className="text-base font-semibold text-gray-900 mb-2">No Analytics Data</h3>
-        <p className="text-sm text-gray-500 max-w-xs">
-          This account doesn't have analytics data yet. Data will appear after the first order.
+        <h3 className="text-base font-semibold text-gray-900 mb-2">Analytics Coming Soon</h3>
+        <p className="text-sm text-gray-500 max-w-[300px] mb-5">
+          Once this account places their first order, you'll see detailed insights including sales trends, reorder predictions, and growth opportunities.
         </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          <span className="px-3 py-1.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">
+            Sales Trends
+          </span>
+          <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
+            Reorder Predictions
+          </span>
+          <span className="px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+            Cross-Sell Opportunities
+          </span>
+        </div>
       </div>
     );
   }
@@ -1713,12 +1721,191 @@ const CallbacksPanel: React.FC<{
 // ============================================
 // CUSTOMER DETAIL VIEW COMPONENT
 // ============================================
+// Terms dropdown options
+const TERMS_OPTIONS = [
+  { value: '', label: 'Not set' },
+  { value: 'Net 10', label: 'Net 10' },
+  { value: 'Net 30', label: 'Net 30' },
+  { value: 'Cash Only', label: 'Cash Only' },
+  { value: 'Credit Card', label: 'Credit Card' },
+  { value: 'Do Not Sell', label: 'Do Not Sell' }
+];
+
+// Inline Editable Card Component - Click to edit, auto-save on blur
+const InlineEditableCard: React.FC<{
+  icon: React.ReactNode;
+  iconBg: string;
+  label: string;
+  value: string;
+  field: string;
+  accountNumber: number;
+  onUpdate: (field: string, value: string) => void;
+  type?: 'text' | 'tel' | 'email' | 'select';
+  options?: { value: string; label: string }[];
+  href?: string;
+  placeholder?: string;
+}> = ({ icon, iconBg, label, value, field, accountNumber, onUpdate, type = 'text', options, href, placeholder }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+  const [isSaving, setIsSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement | HTMLSelectElement>(null);
+
+  useEffect(() => {
+    setEditValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      if (inputRef.current instanceof HTMLInputElement) {
+        inputRef.current.select();
+      }
+    }
+  }, [isEditing]);
+
+  const handleSave = async () => {
+    if (editValue === value) {
+      setIsEditing(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('accounts_lcmd')
+        .update({
+          [field]: editValue || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('account_number', accountNumber);
+
+      if (error) throw error;
+      onUpdate(field, editValue);
+    } catch (err) {
+      console.error('Error saving:', err);
+      setEditValue(value); // Revert on error
+    } finally {
+      setIsSaving(false);
+      setIsEditing(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      setEditValue(value);
+      setIsEditing(false);
+    }
+  };
+
+  const handleSelectChange = async (newValue: string) => {
+    setEditValue(newValue);
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('accounts_lcmd')
+        .update({
+          [field]: newValue || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('account_number', accountNumber);
+
+      if (error) throw error;
+      onUpdate(field, newValue);
+    } catch (err) {
+      console.error('Error saving:', err);
+      setEditValue(value);
+    } finally {
+      setIsSaving(false);
+      setIsEditing(false);
+    }
+  };
+
+  const displayValue = value || placeholder || `No ${label.toLowerCase()}`;
+
+  return (
+    <div
+      className={`flex items-start gap-3 p-3 rounded-xl transition-all duration-150 cursor-pointer group
+        ${isEditing ? 'bg-indigo-50 ring-2 ring-indigo-500' : 'bg-gray-50/50 hover:bg-gray-100/80'}`}
+      onClick={() => !isEditing && setIsEditing(true)}
+    >
+      <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}>
+        {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-gray-500" /> : icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mb-0.5">{label}</p>
+        {isEditing ? (
+          type === 'select' && options ? (
+            <select
+              ref={inputRef as React.RefObject<HTMLSelectElement>}
+              value={editValue}
+              onChange={(e) => handleSelectChange(e.target.value)}
+              onBlur={() => setIsEditing(false)}
+              className="w-full px-2 py-1 text-sm font-medium text-gray-900 bg-white border border-indigo-300 rounded-md
+                focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              {options.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          ) : (
+            <input
+              ref={inputRef as React.RefObject<HTMLInputElement>}
+              type={type}
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              className="w-full px-2 py-1 text-sm font-medium text-gray-900 bg-white border border-indigo-300 rounded-md
+                focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          )
+        ) : (
+          <div className="flex items-center gap-2">
+            {href && value ? (
+              <a
+                href={href}
+                onClick={(e) => e.stopPropagation()}
+                className="text-sm font-medium text-gray-900 hover:text-indigo-600 truncate"
+              >
+                {type === 'tel' ? formatPhone(value) : displayValue}
+              </a>
+            ) : (
+              <p className={`text-sm font-medium truncate ${value ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+                {type === 'tel' && value ? formatPhone(value) : displayValue}
+              </p>
+            )}
+            <Edit3 className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const CustomerDetailView: React.FC<{
   account: Account;
   staffUsername: string;
   onClose: () => void;
-}> = ({ account, staffUsername, onClose }) => {
+  onAccountUpdate?: (updatedAccount: Account) => void;
+}> = ({ account, staffUsername, onClose, onAccountUpdate }) => {
   const [activeTab, setActiveTab] = useState<TabType>('activity');
+  const [localAccount, setLocalAccount] = useState(account);
+
+  // Reset local account when account changes
+  useEffect(() => {
+    setLocalAccount(account);
+  }, [account]);
+
+  const handleFieldUpdate = (field: string, value: string) => {
+    const updated = { ...localAccount, [field]: value };
+    setLocalAccount(updated);
+    if (onAccountUpdate) {
+      onAccountUpdate(updated);
+    }
+  };
 
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: 'activity', label: 'Activity', icon: <PhoneCall className="w-4 h-4" /> },
@@ -1735,103 +1922,143 @@ const CustomerDetailView: React.FC<{
           <div className="flex items-start gap-4">
             {/* Account Number Badge */}
             <div className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-lg font-bold shadow-sm tabular-nums">
-              {account.account_number}
+              {localAccount.account_number}
             </div>
 
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
-                <h2 className="text-xl font-semibold text-gray-900 truncate">{account.acct_name}</h2>
-                {account.status && (
+                <h2 className="text-xl font-semibold text-gray-900 truncate">{localAccount.acct_name}</h2>
+                {localAccount.status && (
                   <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                    account.status.toLowerCase() === 'active'
+                    localAccount.status.toLowerCase() === 'active'
                       ? 'bg-emerald-100 text-emerald-700'
                       : 'bg-gray-100 text-gray-600'
                   }`}>
-                    {account.status}
+                    {localAccount.status}
                   </span>
                 )}
               </div>
               <p className="text-sm text-gray-500 mt-0.5">
-                {account.city && account.state && `${account.city}, ${account.state}`}
-                {account.salesman && <span> · Rep: {account.salesman}</span>}
+                {localAccount.city && localAccount.state && `${localAccount.city}, ${localAccount.state}`}
+                {localAccount.salesman && <span> · Rep: {localAccount.salesman}</span>}
               </p>
             </div>
 
-            {/* Actions */}
+            {/* Actions - Only Call and Email buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <QuickActionButton
                 icon={<Phone className="w-4 h-4" />}
                 label="Call"
-                onClick={() => account.phone && window.open(`tel:${account.phone}`)}
+                onClick={() => localAccount.phone && window.open(`tel:${localAccount.phone}`)}
                 variant="primary"
-                disabled={!account.phone}
+                disabled={!localAccount.phone}
                 size="sm"
               />
               <QuickActionButton
                 icon={<Mail className="w-4 h-4" />}
                 label="Email"
-                onClick={() => account.email_address && window.open(`mailto:${account.email_address}`)}
-                disabled={!account.email_address}
+                onClick={() => localAccount.email_address && window.open(`mailto:${localAccount.email_address}`)}
+                disabled={!localAccount.email_address}
                 size="sm"
               />
             </div>
           </div>
         </div>
 
-        {/* Info Cards */}
+        {/* Inline Editable Info Cards - Click any field to edit */}
         <div className="px-6 pb-4">
+          <p className="text-[10px] text-gray-400 mb-2 flex items-center gap-1">
+            <Edit3 className="w-3 h-3" /> Click any field to edit
+          </p>
+          {/* Row 1: Address, Main Phone, Mobile Phone */}
           <div className="grid grid-cols-3 gap-3">
-            <InfoCard
+            <InlineEditableCard
               icon={<MapPin className="w-4 h-4 text-indigo-600" />}
               iconBg="bg-indigo-100"
-              value={account.address || 'No address'}
-              subValue={`${account.city || ''}, ${account.state || ''} ${account.zip || ''}`}
+              label="Address"
+              value={localAccount.address || ''}
+              field="address"
+              accountNumber={localAccount.account_number}
+              onUpdate={handleFieldUpdate}
+              placeholder="No address"
             />
-            <InfoCard
+            <InlineEditableCard
               icon={<Phone className="w-4 h-4 text-emerald-600" />}
               iconBg="bg-emerald-100"
-              value={formatPhone(account.phone) || 'No phone'}
-              subValue={account.mobile_phone ? `Mobile: ${formatPhone(account.mobile_phone)}` : undefined}
-              href={account.phone ? `tel:${account.phone}` : undefined}
+              label="Main Phone"
+              value={localAccount.phone || ''}
+              field="phone"
+              accountNumber={localAccount.account_number}
+              onUpdate={handleFieldUpdate}
+              type="tel"
+              href={localAccount.phone ? `tel:${localAccount.phone}` : undefined}
+              placeholder="No phone"
             />
-            <InfoCard
+            <InlineEditableCard
+              icon={<Phone className="w-4 h-4 text-teal-600" />}
+              iconBg="bg-teal-100"
+              label="Mobile Phone"
+              value={localAccount.mobile_phone || ''}
+              field="mobile_phone"
+              accountNumber={localAccount.account_number}
+              onUpdate={handleFieldUpdate}
+              type="tel"
+              href={localAccount.mobile_phone ? `tel:${localAccount.mobile_phone}` : undefined}
+              placeholder="No mobile"
+            />
+          </div>
+          {/* Row 2: Email, Contact, Website */}
+          <div className="grid grid-cols-3 gap-3 mt-3">
+            <InlineEditableCard
               icon={<Mail className="w-4 h-4 text-blue-600" />}
               iconBg="bg-blue-100"
               label="Email"
-              value={account.email_address || 'No email'}
-              href={account.email_address ? `mailto:${account.email_address}` : undefined}
+              value={localAccount.email_address || ''}
+              field="email_address"
+              accountNumber={localAccount.account_number}
+              onUpdate={handleFieldUpdate}
+              type="email"
+              href={localAccount.email_address ? `mailto:${localAccount.email_address}` : undefined}
+              placeholder="No email"
+            />
+            <InlineEditableCard
+              icon={<User className="w-4 h-4 text-purple-600" />}
+              iconBg="bg-purple-100"
+              label="Contact"
+              value={localAccount.contact || ''}
+              field="contact"
+              accountNumber={localAccount.account_number}
+              onUpdate={handleFieldUpdate}
+              placeholder="No contact"
+            />
+            <InlineEditableCard
+              icon={<Globe className="w-4 h-4 text-cyan-600" />}
+              iconBg="bg-cyan-100"
+              label="Website"
+              value={localAccount.website || ''}
+              field="website"
+              accountNumber={localAccount.account_number}
+              onUpdate={handleFieldUpdate}
+              href={localAccount.website ? (localAccount.website.startsWith('http') ? localAccount.website : `https://${localAccount.website}`) : undefined}
+              placeholder="No website"
             />
           </div>
-          {(account.contact || account.website || account.terms) && (
-            <div className="grid grid-cols-3 gap-3 mt-3">
-              {account.contact && (
-                <InfoCard
-                  icon={<User className="w-4 h-4 text-purple-600" />}
-                  iconBg="bg-purple-100"
-                  label="Contact"
-                  value={account.contact}
-                />
-              )}
-              {account.website && (
-                <InfoCard
-                  icon={<Globe className="w-4 h-4 text-cyan-600" />}
-                  iconBg="bg-cyan-100"
-                  label="Website"
-                  value={account.website}
-                  href={account.website.startsWith('http') ? account.website : `https://${account.website}`}
-                />
-              )}
-              {account.terms && (
-                <InfoCard
-                  icon={<Building2 className="w-4 h-4 text-amber-600" />}
-                  iconBg="bg-amber-100"
-                  label="Terms"
-                  value={account.terms}
-                />
-              )}
-            </div>
-          )}
+          {/* Row 3: Terms dropdown */}
+          <div className="grid grid-cols-3 gap-3 mt-3">
+            <InlineEditableCard
+              icon={<Building2 className="w-4 h-4 text-amber-600" />}
+              iconBg="bg-amber-100"
+              label="Terms"
+              value={localAccount.terms || ''}
+              field="terms"
+              accountNumber={localAccount.account_number}
+              onUpdate={handleFieldUpdate}
+              type="select"
+              options={TERMS_OPTIONS}
+              placeholder="Not set"
+            />
+          </div>
         </div>
 
         {/* Tabs */}
@@ -1880,6 +2107,32 @@ const CustomerDetailView: React.FC<{
 };
 
 // ============================================
+// ACCOUNT HEALTH DATA FOR LIST COLORING
+// ============================================
+interface AccountHealthSummary {
+  account_number: number;
+  health_score: number;
+  health_status: string;
+  lifetime_sales_dollars: number;
+  order_count_current_90: number;
+}
+
+// Get background color for customer list based on health score (churn rating)
+const getChurnBackgroundColor = (healthScore: number | undefined): string => {
+  if (healthScore === undefined) return ''; // No data, default styling
+  // Bright green: best customers (score >= 3)
+  if (healthScore >= 3) return 'bg-emerald-100 hover:bg-emerald-150 border-l-emerald-500';
+  // Pale green: good customers (score 1-2)
+  if (healthScore >= 1) return 'bg-green-50 hover:bg-green-100 border-l-green-400';
+  // Amber/yellow: middle customers (score 0)
+  if (healthScore === 0) return 'bg-amber-50 hover:bg-amber-100 border-l-amber-400';
+  // Light red: at risk (score -1 to -2)
+  if (healthScore >= -2) return 'bg-orange-50 hover:bg-orange-100 border-l-orange-400';
+  // Dark red: severe churn risk (score <= -3)
+  return 'bg-red-100 hover:bg-red-150 border-l-red-500';
+};
+
+// ============================================
 // MAIN BACKEND SYSTEM PAGE COMPONENT
 // ============================================
 const CRMPage: React.FC = () => {
@@ -1892,6 +2145,10 @@ const CRMPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showAllAccounts, setShowAllAccounts] = useState(false);
+  const [hideOutOfBusiness, setHideOutOfBusiness] = useState(true);
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [accountHealthMap, setAccountHealthMap] = useState<Map<number, AccountHealthSummary>>(new Map());
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Load accounts with salesman filter
   useEffect(() => {
@@ -1912,6 +2169,21 @@ const CRMPage: React.FC = () => {
         if (error) throw error;
         setAccounts(data || []);
         setFilteredAccounts(data || []);
+
+        // Load account health data for churn coloring
+        const { data: healthData, error: healthError } = await supabase
+          .from('agg_account_health')
+          .select('account_number, health_score, health_status, lifetime_sales_dollars, order_count_current_90');
+
+        if (healthError) {
+          console.error('Error loading health data:', healthError);
+        } else if (healthData) {
+          const healthMap = new Map<number, AccountHealthSummary>();
+          healthData.forEach((h: AccountHealthSummary) => {
+            healthMap.set(h.account_number, h);
+          });
+          setAccountHealthMap(healthMap);
+        }
       } catch (err) {
         console.error('Error loading accounts:', err);
       } finally {
@@ -1922,37 +2194,117 @@ const CRMPage: React.FC = () => {
     loadAccounts();
   }, [staffUsername, isSuperUser, showAllAccounts]);
 
-  // Filter accounts based on search
+  // Filter accounts based on search and hide out of business
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredAccounts(accounts);
-      return;
+    let filtered = accounts;
+
+    // Filter out "out of business" accounts if checkbox is checked
+    if (hideOutOfBusiness) {
+      filtered = filtered.filter(a => {
+        const statusLower = (a.status || '').toLowerCase();
+        const zipLower = (a.zip || '').toUpperCase();
+        // Hide if status contains "out of business" or zip starts with XXXXX
+        if (statusLower.includes('out of business')) return false;
+        if (zipLower.startsWith('XXXXX')) return false;
+        return true;
+      });
     }
 
-    const term = searchTerm.toLowerCase().trim();
-    const searchDigits = term.replace(/\D/g, '');
-    const isPhoneSearch = searchDigits.length >= 7;
+    // Apply search filter with intelligent sorting
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      const searchDigits = term.replace(/\D/g, '');
+      const isNumericSearch = /^\d+$/.test(term);
+      const isPhoneSearch = searchDigits.length >= 7;
 
-    const filtered = accounts.filter(a => {
-      if (a.acct_name?.toLowerCase().includes(term)) return true;
-      if (a.account_number?.toString().includes(term)) return true;
-      if (a.zip?.startsWith(term) || a.zip?.includes(term)) return true;
-      if (a.city?.toLowerCase().includes(term)) return true;
-      if (a.state?.toLowerCase().includes(term)) return true;
+      // Filter and categorize matches
+      const exactAccountMatches: Account[] = [];
+      const startsWithAccountMatches: Account[] = [];
+      const containsAccountMatches: Account[] = [];
+      const nameMatches: Account[] = [];
+      const otherMatches: Account[] = [];
 
-      if (isPhoneSearch && searchDigits.length >= 7) {
-        const phoneDigits = a.phone?.replace(/\D/g, '') || '';
-        const mobileDigits = a.mobile_phone?.replace(/\D/g, '') || '';
-        if (phoneDigits === searchDigits || phoneDigits.endsWith(searchDigits)) return true;
-        if (mobileDigits === searchDigits || mobileDigits.endsWith(searchDigits)) return true;
-      }
+      filtered.forEach(a => {
+        const accountNumStr = a.account_number?.toString() || '';
+        const acctNameLower = a.acct_name?.toLowerCase() || '';
 
-      if (a.contact?.toLowerCase().includes(term)) return true;
+        // For numeric searches, prioritize account number matches
+        if (isNumericSearch) {
+          // Exact account number match - highest priority
+          if (accountNumStr === term) {
+            exactAccountMatches.push(a);
+            return;
+          }
+          // Account number starts with search term - second priority
+          if (accountNumStr.startsWith(term)) {
+            startsWithAccountMatches.push(a);
+            return;
+          }
+          // Account number contains search term - third priority
+          if (accountNumStr.includes(term)) {
+            containsAccountMatches.push(a);
+            return;
+          }
+        }
 
-      return false;
-    });
+        // Name matches
+        if (acctNameLower.includes(term)) {
+          nameMatches.push(a);
+          return;
+        }
+
+        // Account number contains (for non-numeric searches)
+        if (!isNumericSearch && accountNumStr.includes(term)) {
+          otherMatches.push(a);
+          return;
+        }
+
+        // Other field matches
+        if (a.zip?.startsWith(term) || a.zip?.includes(term)) {
+          otherMatches.push(a);
+          return;
+        }
+        if (a.city?.toLowerCase().includes(term)) {
+          otherMatches.push(a);
+          return;
+        }
+        if (a.state?.toLowerCase().includes(term)) {
+          otherMatches.push(a);
+          return;
+        }
+        if (isPhoneSearch && searchDigits.length >= 7) {
+          const phoneDigits = a.phone?.replace(/\D/g, '') || '';
+          const mobileDigits = a.mobile_phone?.replace(/\D/g, '') || '';
+          if (phoneDigits === searchDigits || phoneDigits.endsWith(searchDigits) ||
+              mobileDigits === searchDigits || mobileDigits.endsWith(searchDigits)) {
+            otherMatches.push(a);
+            return;
+          }
+        }
+        if (a.contact?.toLowerCase().includes(term)) {
+          otherMatches.push(a);
+          return;
+        }
+      });
+
+      // Sort each category by account number for consistency
+      const sortByAccountNum = (a: Account, b: Account) => a.account_number - b.account_number;
+      startsWithAccountMatches.sort(sortByAccountNum);
+      containsAccountMatches.sort(sortByAccountNum);
+      nameMatches.sort((a, b) => (a.acct_name || '').localeCompare(b.acct_name || ''));
+
+      // Combine results with intelligent ordering
+      filtered = [
+        ...exactAccountMatches,
+        ...startsWithAccountMatches,
+        ...containsAccountMatches,
+        ...nameMatches,
+        ...otherMatches
+      ];
+    }
+
     setFilteredAccounts(filtered);
-  }, [searchTerm, accounts]);
+  }, [searchTerm, accounts, hideOutOfBusiness]);
 
   return (
     <div className="min-h-screen h-screen max-h-screen flex flex-col bg-gray-100 overflow-hidden">
@@ -2058,28 +2410,67 @@ const CRMPage: React.FC = () => {
             />
           )}
 
-          {/* Sidebar Header */}
-          <div className="px-4 py-4 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-gray-900">Customers</h2>
-              <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full tabular-nums">
+          {/* Customer Search Panel */}
+          <div className="px-4 py-3 border-b border-gray-100">
+            {/* Dynamic Search Box - replaces "Customers" label */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                placeholder=""
+                className="w-full pl-9 pr-12 py-2.5 bg-white border-2 border-gray-200 rounded-lg text-sm text-gray-900
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
+                  transition-all"
+              />
+              {/* Pulsating red placeholder text when empty and not focused */}
+              {!searchTerm && !searchFocused && (
+                <div
+                  className="absolute left-9 top-1/2 -translate-y-1/2 pointer-events-none search-placeholder-pulse text-sm"
+                  onClick={() => searchInputRef.current?.focus()}
+                >
+                  Search customers here
+                </div>
+              )}
+              {/* Customer count badge */}
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full tabular-nums">
                 {filteredAccounts.length}
               </span>
             </div>
 
-            {isSuperUser && (
-              <button
-                onClick={() => setShowAllAccounts(!showAllAccounts)}
-                className={`w-full mt-3 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                  showAllAccounts
-                    ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Filter className="w-3.5 h-3.5" />
-                {showAllAccounts ? 'All Accounts' : 'My Accounts'}
-              </button>
-            )}
+            {/* Controls row: checkbox and filter */}
+            <div className="flex items-center justify-between mt-3">
+              {/* Hide Out of Business Checkbox */}
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={hideOutOfBusiness}
+                  onChange={(e) => setHideOutOfBusiness(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                />
+                <span className="text-xs text-gray-600 group-hover:text-gray-900 transition-colors">
+                  Hide out of business
+                </span>
+              </label>
+
+              {isSuperUser && (
+                <button
+                  onClick={() => setShowAllAccounts(!showAllAccounts)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    showAllAccounts
+                      ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Filter className="w-3 h-3" />
+                  {showAllAccounts ? 'All' : 'Mine'}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Customer List */}
@@ -2104,6 +2495,7 @@ const CRMPage: React.FC = () => {
                     account={account}
                     isSelected={selectedAccount?.account_number === account.account_number}
                     onClick={() => setSelectedAccount(account)}
+                    healthScore={accountHealthMap.get(account.account_number)?.health_score}
                   />
                 ))}
               </div>
@@ -2118,6 +2510,14 @@ const CRMPage: React.FC = () => {
               account={selectedAccount}
               staffUsername={staffUsername || 'Unknown'}
               onClose={() => setSelectedAccount(null)}
+              onAccountUpdate={(updatedAccount) => {
+                // Update the selected account
+                setSelectedAccount(updatedAccount);
+                // Update the accounts list
+                setAccounts(prev => prev.map(a =>
+                  a.account_number === updatedAccount.account_number ? updatedAccount : a
+                ));
+              }}
             />
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center bg-gray-50">
