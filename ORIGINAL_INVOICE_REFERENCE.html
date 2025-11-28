@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Number: 469254</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+            color: #000;
+            line-height: 1.4;
+            font-size: 12px;
+        }
+
+        /* Print-optimized container */
+        .invoice-container {
+            width: 210mm;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 15mm;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        /* Header Section */
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .company-section {
+            flex: 1;
+        }
+
+        .company-website {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .company-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 15px;
+        }
+
+        .company-details {
+            font-size: 11px;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        /* Invoice Meta Information */  
+        .invoice-meta {
+            text-align: right;
+            flex: 0 0 200px;
+        }
+
+        .invoice-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .meta-item {
+            font-size: 11px;
+            margin: 3px 0;
+            color: #333;
+        }
+
+        .meta-item strong {
+            color: #000;
+        }
+
+        /* Customer Information - Side by Side Layout */
+        .customer-sections {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .customer-section {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #000;
+            min-height: 120px;
+        }
+
+        .bill-to-title, .ship-to-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-decoration: underline;
+        }
+
+        .customer-info {
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .na-text {
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Items Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 10px;
+        }
+
+        .items-table th {
+            background: white;
+            color: #000;
+            padding: 8px 6px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid #000;
+            font-size: 10px;
+        }
+
+        .items-table th.text-left { text-align: left; }
+        .items-table th.text-right { text-align: right; }
+
+        .items-table td {
+            padding: 6px;
+            border: 1px solid #000;
+            vertical-align: top;
+            font-size: 10px;
+        }
+
+        .items-table tbody tr.row-even {
+            background-color: white;
+        }
+
+        .items-table tbody tr.row-odd {
+            background-color: white;
+        }
+
+        .qty-cell {
+            text-align: center;
+            width: 8%;
+        }
+
+        .part-cell {
+            text-align: left;
+            width: 15%;
+        }
+
+        .desc-cell {
+            text-align: left;
+            width: 47%;
+        }
+
+        .price-cell, .total-cell {
+            text-align: right;
+            width: 15%;
+        }
+
+        .empty-row td {
+            height: 20px;
+        }
+
+        /* Totals Section with Discount Box */
+        .totals-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .discount-box {
+            flex: 0 0 150px;
+            border: 2px dashed #000;
+            padding: 15px;
+            text-align: center;
+            margin-right: 20px;
+        }
+
+        .discount-text {
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .totals-table {
+            flex: 0 0 300px;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .totals-table td {
+            padding: 6px 12px;
+            border: 1px solid #000;
+        }
+
+        .total-label {
+            text-align: right;
+            font-weight: bold;
+            width: 60%;
+        }
+
+        .total-amount {
+            text-align: right;
+            font-weight: bold;
+            width: 40%;
+        }
+
+        .grand-total-row {
+            background: white;
+        }
+
+        .grand-total-row .total-label,
+        .grand-total-row .total-amount {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer-section {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #333;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .invoice-container {
+                margin: 0;
+                padding: 15mm;
+                box-shadow: none;
+                border: none;
+            }
+            
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Header -->
+        <header class="invoice-header">
+            <div class="company-section">
+                <div class="company-website">MusicSupplies.com</div>
+                <h1 class="company-name">Lou Capece Music Distributors</h1>
+                <div class="company-details">
+                    <div>2555 North Jerusalem Rd.</div>
+                    <div>East Meadow, NY 11554</div>
+                    <div>Toll Free 1(800) 321-5584</div>
+                    <div>Reply to: marketing@loucapecemusic.com</div>
+                </div>
+            </div>
+            <div class="invoice-meta">
+                <h2 class="invoice-title">Invoice Number: 469254</h2>
+                <div class="meta-item"><strong>Acct No.:</strong> Lou</div>
+                <div class="meta-item"><strong>Invoice Date:</strong> 03/19/2024</div>
+                <div class="meta-item"><strong>Terms:</strong> Net 10</div>
+                <div class="meta-item"><strong>Sales Rep:</strong> Lou</div>
+            </div>
+        </header>
+
+        <!-- Customer Information - Side by Side -->
+        <section class="customer-sections">
+            <div class="customer-section">
+                <h3 class="bill-to-title">Bill To:</h3>
+                <div class="customer-info">
+                    <div><strong>bill to info here</strong></div>
+                    <div class="na-text">N/A</div>
+                </div>
+            </div>
+            <div class="customer-section">
+                <h3 class="ship-to-title">Ship To:</h3>
+                <div class="customer-info">
+                    <div class="na-text">optional ship-to</div>
+                    <div class="na-text">info here</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Qty Ord</th>
+                    <th>Qty Shp</th>
+                    <th class="text-left">Part Number</th>
+                    <th class="text-left">Description</th>
+                    <th class="text-right">Unit Net</th>
+                    <th class="text-right">Extended Net</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="row-even">
+                    <td class="qty-cell">2</td>
+                    <td class="qty-cell">2</td>
+                    <td class="part-cell">DH-14WT</td>
+                    <td class="desc-cell">Bullseye Drum Head: 14" White</td>
+                    <td class="price-cell">$5.90</td>
+                    <td class="total-cell">$11.80</td>
+                </tr>
+                <tr class="row-odd">
+                    <td class="qty-cell">1</td>
+                    <td class="qty-cell">1</td>
+                    <td class="part-cell">DP-200</td>
+                    <td class="desc-cell">Drum Pedal: Deluxe New York Pro</td>
+                    <td class="price-cell">$23.00</td>
+                    <td class="total-cell">$23.00</td>
+                </tr>
+                <tr class="row-even">
+                    <td class="qty-cell">12</td>
+                    <td class="qty-cell">12</td>
+                    <td class="part-cell">E-2223</td>
+                    <td class="desc-cell">Ernie Ball Super Slinky Electric 9-42</td>
+                    <td class="price-cell">$4.44</td>
+                    <td class="total-cell">$53.28</td>
+                </tr>
+                <tr class="row-odd">
+                    <td class="qty-cell">1</td>
+                    <td class="qty-cell">1</td>
+                    <td class="part-cell">5A</td>
+                    <td class="desc-cell">Drumsticks: 5A Nylon Tip New York Pro (6 Pairs)</td>
+                    <td class="price-cell">$13.50</td>
+                    <td class="total-cell">$13.50</td>
+                </tr>
+                <tr class="row-even">
+                    <td class="qty-cell">1</td>
+                    <td class="qty-cell">1</td>
+                    <td class="part-cell">5AW</td>
+                    <td class="desc-cell">Drumsticks: 5A Wood Tip New York Pro (6 Pairs)</td>
+                    <td class="price-cell">$13.50</td>
+                    <td class="total-cell">$13.50</td>
+                </tr>
+                <tr class="row-odd">
+                    <td class="qty-cell">1</td>
+                    <td class="qty-cell">1</td>
+                    <td class="part-cell">5B</td>
+                    <td class="desc-cell">Drumsticks: 5B Nylon Tip New York Pro (6 Pairs)</td>
+                    <td class="price-cell">$13.50</td>
+                    <td class="total-cell">$13.50</td>
+                </tr>
+                <tr class="row-even">
+                    <td class="qty-cell">1</td>
+                    <td class="qty-cell">1</td>
+                    <td class="part-cell">5BW</td>
+                    <td class="desc-cell">Drumsticks: 5B Wood Tip New York Pro (6 Pairs)</td>
+                    <td class="price-cell">$13.50</td>
+                    <td class="total-cell">$13.50</td>
+                </tr>
+                <tr class="row-odd">
+                    <td class="qty-cell">6</td>
+                    <td class="qty-cell">6</td>
+                    <td class="part-cell">SMKB</td>
+                    <td class="desc-cell">Classic Metal Kazoo: Blue</td>
+                    <td class="price-cell">$3.24</td>
+                    <td class="total-cell">$19.44</td>
+                </tr>
+                <tr class="row-even">
+                    <td class="qty-cell">6</td>
+                    <td class="qty-cell">6</td>
+                    <td class="part-cell">SMK</td>
+                    <td class="desc-cell">Classic Metal Kazoo: Red</td>
+                    <td class="price-cell">$3.24</td>
+                    <td class="total-cell">$19.44</td>
+                </tr>
+                <tr class="row-odd">
+                    <td class="qty-cell">1</td>
+                    <td class="qty-cell">1</td>
+                    <td class="part-cell">C-GS200E</td>
+                    <td class="desc-cell">36" Acoustic Eq Ctwy Guitar (Rswd) Spruce Top - Crossroads</td>
+                    <td class="price-cell">$198.00</td>
+                    <td class="total-cell">$198.00</td>
+                </tr>
+                <tr class="row-even">
+                    <td class="qty-cell">2</td>
+                    <td class="qty-cell">2</td>
+                    <td class="part-cell">TEC-12G</td>
+                    <td class="desc-cell">Danville Amp: 12 Watts w/ 6.5" Speaker & 3 Band EQ</td>
+                    <td class="price-cell">$58.00</td>
+                    <td class="total-cell">$116.00</td>
+                </tr>
+                <tr class="row-odd">
+                    <td class="qty-cell">1</td>
+                    <td class="qty-cell">1</td>
+                    <td class="part-cell">TEC-10B</td>
+                    <td class="desc-cell">Danville Amp: 10 Watt Bass w/ 6.5" Speaker ALC</td>
+                    <td class="price-cell">$54.00</td>
+                    <td class="total-cell">$54.00</td>
+                </tr>
+                <tr class="row-even">
+                    <td class="qty-cell">6</td>
+                    <td class="qty-cell">6</td>
+                    <td class="part-cell">E-2006</td>
+                    <td class="desc-cell">Ernie Ball Earthwood Acoustic Extra Light 10-50</td>
+                    <td class="price-cell">$4.49</td>
+                    <td class="total-cell">$26.94</td>
+                </tr>
+                <tr class="row-odd empty-row">
+                    <td class="qty-cell">&nbsp;</td>
+                    <td class="qty-cell">&nbsp;</td>
+                    <td class="part-cell">&nbsp;</td>
+                    <td class="desc-cell">&nbsp;</td>
+                    <td class="price-cell">&nbsp;</td>
+                    <td class="total-cell">&nbsp;</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Totals Section with Discount Box -->
+        <section class="totals-section">
+            <div class="discount-box">
+                <div class="discount-text">Insert line for</div>
+                <div class="discount-text">discount</div>
+            </div>
+            <table class="totals-table">
+                <tr>
+                    <td class="total-label">Subtotal:</td>
+                    <td class="total-amount">$575.90</td>
+                </tr>
+                <tr>
+                    <td class="total-label">Shipping:</td>
+                    <td class="total-amount">$36.29</td>
+                </tr>
+                <tr>
+                    <td class="total-label">Payments Received:</td>
+                    <td class="total-amount">($832.19)</td>
+                </tr>
+                <tr class="grand-total-row">
+                    <td class="total-label">Total Due:</td>
+                    <td class="total-amount">$-220.00</td>
+                </tr>
+            </table>
+        </section>
+
+        <!-- Footer -->
+        <section class="footer-section">
+            <div>Thank you for your business!</div>
+        </section>
+    </div>
+</body>
+</html>

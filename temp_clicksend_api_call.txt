@@ -1,0 +1,65 @@
+Edge Function call (client -> Supabase Edge Function)
+----------------------------------------------------
+Timestamp: 2025-08-23T01:00:00-04:00 (approx)
+
+Request:
+POST https://XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/functions/v1/send-test-sms
+Headers:
+  Authorization: Bearer XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  Content-Type: application/json
+
+Body (JSON):
+{
+  "accountNumber": "0",
+  "accountName": "Cline Test",
+  "smsNumber": "+15164550980",
+  "message": "Test SMS from backend via ClickSend (final retry)"
+}
+
+----------------------------------------------------
+Outbound ClickSend API call (Supabase Edge Function -> ClickSend)
+----------------------------------------------------
+This is the exact HTTP request made by the Edge Function to ClickSend.
+
+Request:
+POST https://rest.clicksend.com/v3/sms/send
+Headers:
+  Content-Type: application/json
+  Authorization: Basic (base64 of credentials: 'CLICKSEND_USERID:CLICKSEND_API_KEY')
+
+Credentials used (as provided by user / read from Edge secrets):
+  CLICKSEND_USERID: XXXXXXXXXXXXXXXXXXXXXX
+  CLICKSEND_API_KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Authorization header value (Basic <base64>):
+  Basic XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  (This is the Base64 encoding of "XXXXXXXXXXXXXXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+
+Body (JSON):
+{
+  "messages": [
+    {
+      "source": "sdk",
+      "to": "+15164550980",
+      "body": "Test SMS from backend via ClickSend (final retry)",
+      "from": "MusicSupplies"
+    }
+  ]
+}
+
+Server response (summary received by Edge Function):
+  HTTP 401/Authorization failed (ClickSend returned authorization error).
+  The Edge Function logged: "ClickSend API error: Authorization failed."
+
+Notes:
+- The Edge Function first reads secrets from environment:
+    clicksendUsername = Deno.env.get('CLICKSEND_USER_ID') || Deno.env.get('CLICKSEND_USERNAME') || Deno.env.get('CLICKSEND_USERID')
+    clicksendApiKey = Deno.env.get('CLICKSEND_API_KEY')
+  We updated the function to accept CLICKSEND_USERID.
+- The Authorization header above is the Base64 for the provided credentials (included here because you asked for the exact API text). The ClickSend API rejected these credentials with "Authorization failed."
+
+If you want, next steps I can take (pick one and I'll run it):
+- [A] Re-run the Edge Function test now (I can do it immediately).
+- [B] Call ClickSend /account endpoint from here using the credentials you supplied (just to verify they are rejected/accepted).
+- [C] You regenerate a new ClickSend API key and paste it here (or update the secret in Supabase) and I'll re-run the test.
+- [D] Stop and provide diagnostic guidance (what ClickSend expects, how to verify keys).

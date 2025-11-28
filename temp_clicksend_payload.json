@@ -1,0 +1,9 @@
+{
+  "messages": [
+    {
+      "source": "MusicSupplies-Frontend-Test",
+      "body": "Test frontend SMS from MusicSupplies. Please confirm receipt.",
+      "to": "+15164550980"
+    }
+  ]
+}

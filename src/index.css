@@ -1,0 +1,391 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global font family override - Apply Poppins to all elements */
+* {
+  font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+}
+
+/* Ensure body and html use Poppins */
+html, body {
+  font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+}
+
+/* Prose styling for HTML content in product descriptions */
+.prose {
+  color: #374151;
+  max-width: 65ch;
+}
+
+.prose-sm {
+  font-size: 0.875rem;
+  line-height: 1.7142857;
+}
+
+.prose p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose ul {
+  list-style-type: disc;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  padding-left: 1.625em;
+}
+
+.prose li {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose br {
+  content: "";
+  display: block;
+  margin: 0.25em 0;
+}
+
+/* Fix for max-w-none */
+.max-w-none {
+  max-width: none;
+}
+
+/* Hide common chat widgets and floating elements */
+[id*="crisp"], [class*="crisp"],
+[id*="intercom"], [class*="intercom"],
+[id*="zendesk"], [class*="zendesk"],
+[id*="tawk"], [class*="tawk"],
+[id*="livechat"], [class*="livechat"],
+[id*="chat"], [class*="chat-widget"],
+[id*="support"], [class*="support-widget"],
+[data-widget*="chat"],
+.widget-container,
+.chat-widget,
+.support-widget,
+.floating-widget,
+.envelope-widget {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  z-index: -1 !important;
+}
+
+/* Hide any fixed positioned elements with envelope-like content */
+*[style*="position: fixed"]:has([class*="envelope"]),
+*[style*="position: fixed"]:has([class*="mail"]),
+*[style*="position: fixed"]:has([class*="chat"]) {
+  display: none !important;
+}
+
+/* Block common chat widget iframe sources */
+iframe[src*="crisp.chat"],
+iframe[src*="intercom.io"],
+iframe[src*="zendesk.com"],
+iframe[src*="tawk.to"],
+iframe[src*="livechat.com"] {
+  display: none !important;
+}
+
+/* Remove any highlighting or overlay effects from images */
+img {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Specifically target logo images to prevent highlighting */
+img[alt*="Logo"], img[alt*="logo"] {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  background: transparent !important;
+  position: relative !important;
+}
+
+/* Remove any pseudo-elements that might create overlays */
+img[alt*="Logo"]::before, 
+img[alt*="Logo"]::after,
+img[alt*="logo"]::before, 
+img[alt*="logo"]::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Custom search prompt pulse animation */
+@keyframes searchPromptPulse {
+  0% {
+    color: #dc2626;
+    opacity: 1;
+    transform: scale(1);
+    text-shadow: 0 0 8px rgba(220, 38, 38, 0.3);
+  }
+  50% {
+    color: #fca5a5;
+    opacity: 0.4;
+    transform: scale(1.05);
+    text-shadow: 0 0 12px rgba(220, 38, 38, 0.6);
+  }
+  100% {
+    color: #dc2626;
+    opacity: 1;
+    transform: scale(1);
+    text-shadow: 0 0 8px rgba(220, 38, 38, 0.3);
+  }
+}
+
+.search-prompt-pulse {
+  animation: searchPromptPulse 2s ease-in-out infinite;
+}
+
+/* Model placeholder pulsing animation - light gray */
+@keyframes modelPlaceholderPulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
+
+.model-placeholder-pulse {
+  animation: modelPlaceholderPulse 2s ease-in-out infinite;
+  color: #9ca3af; /* Light gray */
+}
+
+/* Promo code button critical red flashing border animation */
+@keyframes promoBorderPulse {
+  0% {
+    box-shadow: 0 0 10px 0 rgba(220, 38, 38, 0.8);
+    border-color: rgba(220, 38, 38, 1);
+  }
+  50% {
+    box-shadow: 0 0 15px 5px rgba(220, 38, 38, 0.5);
+    border-color: rgba(220, 38, 38, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 10px 0 rgba(220, 38, 38, 0.8);
+    border-color: rgba(220, 38, 38, 1);
+  }
+}
+
+.promo-button-pulse {
+  animation: promoBorderPulse 2.5s ease-in-out infinite;
+  border-width: 7px;
+  border-style: solid;
+  border-color: #dc2626;
+  transition: all 0.3s ease;
+}
+
+/* Field validation error flashing animation */
+@keyframes fieldErrorFlash {
+  0% {
+    color: #dc2626;
+    transform: scale(1.05);
+  }
+  50% {
+    color: #ef4444;
+    transform: scale(1);
+  }
+  100% {
+    color: #dc2626;
+    transform: scale(1.05);
+  }
+}
+
+.field-error-flash {
+  animation: fieldErrorFlash 0.8s ease-in-out infinite;
+  color: #dc2626;
+  font-weight: 700;
+}
+
+/* Professional subtle pulsing for required fields */
+@keyframes subtleRequiredPulse {
+  0% {
+    color: #dc2626; /* Deep red */
+  }
+  50% {
+    color: #f87171; /* Light red */
+  }
+  100% {
+    color: #dc2626; /* Back to deep red */
+  }
+}
+
+.subtle-required-pulse {
+  animation: subtleRequiredPulse 2s ease-in-out infinite;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* Custom scrollbar styles for product table */
+.product-table-scroll {
+  /* Firefox scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f3f4f6;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) scrollbar styling */
+.product-table-scroll::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.product-table-scroll::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 6px;
+}
+
+.product-table-scroll::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 6px;
+  border: 2px solid #f3f4f6;
+}
+
+.product-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+.product-table-scroll::-webkit-scrollbar-corner {
+  background: #f3f4f6;
+}
+
+/* Fixed header size class - not subject to font scaling */
+.fixed-header-size {
+  font-size: inherit !important;
+  transform: none !important;
+  zoom: 1 !important;
+}
+
+/* Ensure header logo and phone are always visible and large */
+.fixed-header-size.text-4xl {
+  font-size: 2.25rem !important; /* 36px - doubled from original 18px */
+}
+
+.fixed-header-size.text-2xl {
+  font-size: 1.5rem !important; /* 24px - doubled from original 12px */
+}
+
+/* Professional Font Scaling - Increased by 40% for search boxes */
+/* Previous: smaller=9.8px, standard=11.2px, larger=12.6px */
+/* New: smaller=13.72px, standard=15.68px, larger=17.64px (40% increase) */
+.font-professional-smaller {
+  font-size: 0.8575rem !important; /* 13.72px - 40% increase from 9.8px */
+  line-height: 1.6 !important;
+}
+
+.font-professional-standard {
+  font-size: 0.98rem !important; /* 15.68px - 40% increase from 11.2px */
+  line-height: 1.6 !important;
+}
+
+.font-professional-larger {
+  font-size: 1.1025rem !important; /* 17.64px - 40% increase from 12.6px */
+  line-height: 1.6 !important;
+}
+
+/* Product Table Specific Font Classes - ONLY affects product grid rows */
+.font-product-table-smaller {
+  font-size: 8pt !important;
+  line-height: 1.3 !important;
+  font-weight: 400;
+}
+
+.font-product-table-standard {
+  font-size: 10pt !important;
+  line-height: 1.3 !important;
+  font-weight: 400;
+}
+
+.font-product-table-larger {
+  font-size: 12pt !important;
+  line-height: 1.3 !important;
+  font-weight: 400;
+}
+
+/* Demo Mode Styles */
+.demo-mode-blur {
+  filter: blur(4px);
+  -webkit-filter: blur(4px);
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Disable text selection in demo mode */
+.demo-mode-no-select {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* Disable right-click context menu in demo mode */
+.demo-mode-no-context {
+  pointer-events: none;
+}
+
+/* Demo mode disabled button */
+.demo-mode-disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* Mobile Preferred red flashing animation - 5 second cycles from red to white */
+@keyframes mobilePreferredFlash {
+  0% {
+    color: #dc2626; /* Deep red */
+    opacity: 1;
+  }
+  25% {
+    color: #f87171; /* Medium red */
+    opacity: 0.8;
+  }
+  50% {
+    color: #fca5a5; /* Light red */
+    opacity: 0.6;
+  }
+  75% {
+    color: #fecaca; /* Very light red */
+    opacity: 0.4;
+  }
+  90% {
+    color: #ffffff; /* White */
+    opacity: 0.2;
+  }
+  100% {
+    color: #dc2626; /* Back to deep red */
+    opacity: 1;
+  }
+}
+
+.mobile-preferred-flash {
+  animation: mobilePreferredFlash 5s ease-in-out infinite;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* (Removed responsive header typography; using fixed sizes again) */
+/* Responsive header typography (fits within 64px header) */
+.header-logo {
+  font-size: clamp(22px, 2.8vw, 36px);
+  line-height: 1;
+}
+
+.header-phone {
+  font-size: clamp(16px, 2vw, 24px);
+  line-height: 1;
+}

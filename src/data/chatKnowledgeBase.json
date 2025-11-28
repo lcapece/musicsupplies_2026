@@ -1,0 +1,98 @@
+{
+  "businessInfo": {
+    "name": "Music Supplies",
+    "hours": {
+      "monday": "9:00 AM - 6:00 PM",
+      "tuesday": "9:00 AM - 6:00 PM",
+      "wednesday": "9:00 AM - 6:00 PM",
+      "thursday": "9:00 AM - 6:00 PM",
+      "friday": "9:00 AM - 6:00 PM",
+      "saturday": "10:00 AM - 4:00 PM",
+      "sunday": "Closed"
+    },
+    "location": "Main Street Location",
+    "phone": "1-800-MUSIC-99",
+    "email": "info@musicsupplies.com"
+  },
+  "products": {
+    "guitars": {
+      "keywords": ["guitar", "guitars", "fender", "gibson", "acoustic", "electric", "bass"],
+      "response": "We carry a wide selection of guitars including Yamaha, Ibanez, and Epiphone brands. We have acoustic, electric, and bass guitars in stock. While we don't currently stock Fender or Gibson, our Yamaha and Ibanez lines offer comparable quality at better prices. Would you like to know about any specific model?",
+      "brands": ["Yamaha", "Ibanez", "Epiphone"],
+      "types": ["Acoustic", "Electric", "Bass", "Classical"]
+    },
+    "drums": {
+      "keywords": ["drum", "drums", "drum kit", "percussion", "cymbals"],
+      "response": "We have a great selection of drum kits and percussion instruments from Pearl, Tama, and Ludwig. We stock complete drum sets, individual drums, cymbals, and all accessories. Are you looking for a beginner kit or professional setup?",
+      "brands": ["Pearl", "Tama", "Ludwig", "Zildjian"],
+      "types": ["Acoustic Sets", "Electronic Kits", "Cymbals", "Hardware"]
+    },
+    "keyboards": {
+      "keywords": ["keyboard", "piano", "synthesizer", "synth", "digital piano"],
+      "response": "We offer keyboards and digital pianos from Roland, Korg, and Yamaha. From portable keyboards for beginners to professional synthesizers and digital pianos, we have options for every skill level and budget. What type of keyboard are you interested in?",
+      "brands": ["Roland", "Korg", "Yamaha", "Casio"],
+      "types": ["Digital Pianos", "Synthesizers", "MIDI Controllers", "Portable Keyboards"]
+    },
+    "accessories": {
+      "keywords": ["strings", "picks", "cables", "stands", "cases", "accessories"],
+      "response": "We carry a full range of music accessories including strings, picks, cables, stands, cases, and more. All major brands are available. What specific accessories are you looking for?",
+      "categories": ["Strings", "Cables", "Cases", "Stands", "Sheet Music"]
+    }
+  },
+  "services": {
+    "repairs": {
+      "keywords": ["repair", "fix", "broken", "maintenance", "setup"],
+      "response": "Yes, we offer instrument repair and maintenance services! Our certified technicians can handle guitar setups, drum tuning, keyboard repairs, and more. Typical turnaround is 3-5 business days. Would you like to schedule a repair appointment?"
+    },
+    "lessons": {
+      "keywords": ["lesson", "lessons", "teacher", "learn", "instruction"],
+      "response": "We offer music lessons for all skill levels! We have instructors for guitar, drums, piano, and more. Lessons are $30 for 30 minutes or $50 for an hour. Would you like to sign up for a free trial lesson?"
+    },
+    "financing": {
+      "keywords": ["financing", "payment plan", "credit", "layaway", "pay later"],
+      "response": "Yes, we offer financing options! We have 12-month interest-free financing on purchases over $500, and layaway programs available. You can apply for financing online or in-store. Would you like more details about our financing options?"
+    }
+  },
+  "policies": {
+    "returns": {
+      "keywords": ["return", "refund", "exchange", "warranty"],
+      "response": "We have a 30-day return policy on most items in original condition. Electronics have a 14-day return window. All instruments come with manufacturer warranties. Extended warranties are available. Do you have a specific return question?"
+    },
+    "shipping": {
+      "keywords": ["shipping", "delivery", "ship", "deliver"],
+      "response": "We offer free shipping on orders over $99! Standard shipping (3-5 days) is $9.99. Express shipping (1-2 days) is $24.99. Local delivery is available for large items. Where would you need items shipped to?"
+    },
+    "priceMatch": {
+      "keywords": ["price match", "competitor", "cheaper", "best price"],
+      "response": "Yes, we offer price matching! We'll match any authorized dealer's advertised price. Just show us the competitor's current ad or website. Some exclusions apply for clearance items. Do you have a price you'd like us to match?"
+    }
+  },
+  "commonQuestions": [
+    {
+      "question": "Do you buy used instruments?",
+      "answer": "Yes, we buy and trade used instruments! Bring your instrument in for a free appraisal. We offer cash or store credit (store credit gives you 20% more value)."
+    },
+    {
+      "question": "Do you rent instruments?",
+      "answer": "Yes, we have a rent-to-own program perfect for students! Monthly rentals start at $25 for band instruments. Rental payments can be applied toward purchase."
+    },
+    {
+      "question": "Can I try instruments before buying?",
+      "answer": "Absolutely! We have sound-proof testing rooms where you can try any instrument. Our staff can help you find the perfect match for your needs and budget."
+    },
+    {
+      "question": "Do you have gift cards?",
+      "answer": "Yes, we offer gift cards in any amount from $10 to $1000. They can be purchased online or in-store and never expire."
+    },
+    {
+      "question": "Are you hiring?",
+      "answer": "We're always looking for passionate music enthusiasts! Check our website for current openings or drop off a resume in-store. Sales experience and instrument knowledge are a plus!"
+    }
+  ],
+  "fallbackResponses": [
+    "I'd be happy to help you with that! Let me connect you with one of our staff members who can provide more specific information.",
+    "That's a great question! For the most accurate answer, I'll need to check with our team. Can I get your contact information to follow up?",
+    "I want to make sure you get the right information. Would you prefer to speak with a specialist about this?",
+    "Let me find someone who can give you the detailed answer you need. One moment please!"
+  ]
+}

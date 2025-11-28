@@ -1,0 +1,21 @@
+Theme_Name,File_Count,Priority_1to5,Keep_Obsolete_Merge,Current_Status,Consolidate_Into_Single_File,Notes
+Core Authentication System,25,5,KEEP,ACTIVE,YES,Foundation security - merge into 01_SECURITY_AUTHENTICATION.md
+2FA Implementation,20,4,MERGE,COMPLETED,YES,Most are temporary fixes - consolidate key info only
+Password Management,15,4,MERGE,COMPLETED,YES,Merge into authentication - many emergency fixes
+Database Schema/Backend,12,5,KEEP,ACTIVE,YES,Core backend docs - merge into 02_BACKEND_DATABASE.md
+Order Management System,10,4,KEEP,ACTIVE,YES,Core business logic - merge into 04_ORDER_MANAGEMENT.md
+Promo Code System,8,3,KEEP,ACTIVE,YES,Business feature - merge into 05_PROMO_CODE_SYSTEM.md
+SMS/ClickSend Integration,15,3,MERGE,COMPLETED,YES,Many test/fix files - keep setup guide only
+User Account Management,8,4,KEEP,ACTIVE,YES,Core user system - merge into 03_USER_MANAGEMENT.md
+Admin System Functions,10,3,MERGE,MIXED,YES,Admin tools - merge into user management
+S3/Image Management,8,2,OBSOLETE,COMPLETED,NO,Check if S3 system still used - likely obsolete
+Email/Mailgun System,6,2,MERGE,ACTIVE,YES,Email integration - merge into backend
+Chat System,4,2,KEEP,ACTIVE,YES,Active feature - merge into user management
+Security Fixes/Patches,20,1,OBSOLETE,COMPLETED,NO,Emergency patches - historical only
+Emergency Procedures,8,2,MERGE,MIXED,YES,Keep updated procedures only
+Deployment Guides,6,3,KEEP,ACTIVE,YES,Important for operations - consolidate
+System Logging/Monitoring,5,2,MERGE,ACTIVE,YES,Merge into backend documentation
+Contact Info Management,4,2,MERGE,ACTIVE,YES,Merge into user management
+Version Control/Updates,3,3,KEEP,ACTIVE,YES,Important for deployment
+Site Status/Maintenance,3,2,KEEP,ACTIVE,YES,Operations feature
+Invoice/PDF Generation,3,2,KEEP,ACTIVE,YES,Business feature - merge into order management

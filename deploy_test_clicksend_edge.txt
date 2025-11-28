@@ -1,0 +1,1 @@
+npx supabase functions deploy test-clicksend-edge --project-ref ekklokrukxmqlahtonnc

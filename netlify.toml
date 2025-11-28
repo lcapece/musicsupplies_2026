@@ -1,0 +1,88 @@
+[build]
+  ignore_extensions = ["neon"]
+  base = "."
+  publish = "dist"
+  functions = "netlify/functions"
+  # Split the install and build into separate steps
+  command = "npm ci --legacy-peer-deps && npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+
+# Local development configuration
+[dev]
+  framework = "#custom"
+  command = "npm run dev"
+  targetPort = 5173
+  port = 8888
+  publish = "dist"
+  autoLaunch = false
+
+# Site settings
+[context.production]
+  command = "npm install --legacy-peer-deps && npm run build"
+  
+[context.deploy-preview]
+  command = "npm install --legacy-peer-deps && npm run build"
+  
+[context.branch-deploy]
+  command = "npm install --legacy-peer-deps && npm run build"
+
+# Subdomain configuration for chat.musicsupplies.com
+[[redirects]]
+  from = "https://chat.musicsupplies.com/*"
+  to = "https://musicsupplies.com/chat"
+  status = 200
+  force = true
+  headers = {X-From-Chat = "true"}
+
+# SPA redirect rule - MUST be last to catch all unmatched routes
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+
+# Headers for security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Security headers
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # Cache static assets
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Specific cache settings for HTML
+[[headers]]
+  for = "*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Cache settings for CSS and JS
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Content-Type = "application/javascript; charset=utf-8"
+
+# Specific headers for ES modules
+[[headers]]
+  for = "/assets/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Content-Type = "application/javascript; charset=utf-8"
+
+# Environment variables (will be set in Netlify dashboard)
+# VITE_SUPABASE_URL = "your-supabase-url"
+# VITE_SUPABASE_ANON_KEY = "your-supabase-anon-key"

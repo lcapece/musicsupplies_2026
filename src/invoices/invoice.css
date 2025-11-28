@@ -1,0 +1,181 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #fff; /* Changed background to white like the image */
+    color: #000; /* Changed default text to black */
+    font-size: 10pt; /* Approximate base font size from image */
+}
+
+.invoice-box {
+    max-width: 850px; /* Adjusted to better fit content */
+    margin: auto;
+    padding: 20px; /* Reduced padding slightly */
+    border: none; /* Removed border */
+    background-color: #fff;
+    box-shadow: none; /* Removed box-shadow */
+}
+
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px; /* Reduced margin */
+    padding-bottom: 10px;
+    border-bottom: 2px solid #000;
+}
+
+.company-details h2 {
+    margin: 0 0 5px 0;
+    font-size: 16pt; /* Adjusted font size */
+    font-weight: bold;
+    color: #000080; /* Navy blue color */
+}
+
+.company-details p {
+    margin: 2px 0;
+    font-size: 10pt;
+}
+.company-details a {
+    color: #0000FF; /* Blue for email link */
+    text-decoration: underline;
+}
+
+.invoice-info {
+    text-align: right;
+}
+
+.invoice-info h1 {
+    margin: 0 0 10px 0;
+    font-size: 18pt; /* Adjusted font size */
+    font-weight: bold;
+}
+
+.invoice-info p {
+    margin: 2px 0;
+    font-size: 10pt;
+}
+
+.bill-to {
+    margin-bottom: 15px; /* Reduced margin */
+    padding-bottom: 5px;
+    border-bottom: 1px solid #000; /* Line under Bill To */
+}
+
+.bill-to p {
+    margin: 2px 0;
+    font-size: 10pt;
+}
+
+.bill-to strong {
+    font-weight: bold;
+    font-style: italic; /* Bill To: is italic in image */
+}
+
+
+.line-items table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px; /* Reduced margin */
+}
+
+.line-items th, .line-items td {
+    border: 1px solid #000;
+    padding: 4px 6px; /* Adjusted padding */
+    text-align: left;
+    font-size: 9pt; /* Slightly smaller for table content */
+    vertical-align: top;
+}
+
+.line-items th {
+    background-color: #000; /* Black background for headers */
+    color: #fff; /* White text for headers */
+    font-weight: bold;
+    text-align: center;
+}
+.line-items td {
+    height: auto; /* Allow height to adjust to content */
+    min-height: 20px; /* Minimum height for a row */
+}
+
+
+.line-items .desc-header {
+    width: 45%; /* Adjusted width */
+}
+.line-items .text-right {
+    text-align: right;
+}
+
+
+.summary-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Align items to the top */
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #000; /* Line above subtotal */
+}
+
+.qr-code {
+    width: 20%;
+    text-align: center;
+}
+
+.qr-code img {
+    width: 80px; /* Adjust as needed */
+    height: 80px; /* Adjust as needed */
+    margin-bottom: 5px;
+}
+
+.qr-code p {
+    font-size: 8pt;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.totals {
+    width: 45%; /* Adjusted width */
+}
+
+.totals table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.totals td {
+    padding: 3px 6px; /* Adjusted padding */
+    font-size: 10pt;
+    border: none; /* No borders for totals table cells */
+}
+
+.totals .label {
+    text-align: right;
+    font-style: italic; /* Labels like Subtotal: are italic */
+    width: 70%;
+}
+.totals .amount {
+    text-align: right;
+    font-weight: bold; /* Amounts are bold */
+}
+
+.totals .total-due-label {
+    font-weight: bold;
+    font-size: 10pt; /* Match other labels */
+    font-style: normal; /* Not italic */
+}
+.totals .total-due-amount {
+    font-weight: bold;
+    font-size: 10pt;
+    color: #FF0000; /* Red color for total amount due */
+}
+
+.footer-line {
+    border: none;
+    border-top: 1px solid #000;
+    margin-top: 15px;
+}
+
+/* Placeholder for empty rows to ensure table structure */
+.line-items tbody tr td:first-child:empty::before {
+    content: "\\00a0"; /* Non-breaking space */
+}

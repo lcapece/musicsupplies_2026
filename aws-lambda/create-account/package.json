@@ -1,0 +1,9 @@
+{
+  "name": "create-account-lambda",
+  "version": "1.0.0",
+  "description": "Lambda function to create accounts in SQL Server",
+  "main": "index.js",
+  "dependencies": {
+    "mssql": "^10.0.4"
+  }
+}

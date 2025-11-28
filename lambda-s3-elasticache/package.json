@@ -1,0 +1,17 @@
+{
+  "name": "s3-elasticache-lambda",
+  "version": "1.0.0",
+  "description": "Lambda function to sync S3 bucket file list to ElastiCache",
+  "main": "index.js",
+  "scripts": {
+    "package": "npm ci --production && zip -r function.zip .",
+    "deploy": "aws lambda update-function-code --function-name s3-elasticache-sync --zip-file fileb://function.zip"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1500.0",
+    "redis": "^3.1.2"
+  },
+  "devDependencies": {},
+  "author": "",
+  "license": "ISC"
+}

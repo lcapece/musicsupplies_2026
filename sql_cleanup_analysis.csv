@@ -1,0 +1,16 @@
+SQL_Theme,File_Count,Priority_1to5,Keep_Delete_Migrate,Status,Action_Needed,Notes
+Authentication Fixes,40,1,DELETE,OBSOLETE,Move to archive,Emergency patches - mostly obsolete
+2FA System,15,3,MIGRATE,COMPLETED,Consolidate to migration,Keep final working migration only
+Password Management,20,1,DELETE,OBSOLETE,Move to archive,Emergency fixes - superseded by migrations
+Admin Account 999,12,2,DELETE,TESTING,Move to archive,Debug/test files for specific account
+Account Management,8,3,MIGRATE,ACTIVE,Keep essential ones,Core account creation scripts
+Promo Code System,10,3,MIGRATE,ACTIVE,Keep essential ones,Business logic - migrate to final versions
+Emergency/Critical Fixes,25,1,DELETE,OBSOLETE,Move to archive,Crisis management files - historical only
+Database Structure,15,4,KEEP,ACTIVE,Review and consolidate,Core table creation scripts
+Contact Info System,6,3,MIGRATE,ACTIVE,Consolidate,User data management
+Site Status/Maintenance,5,3,KEEP,ACTIVE,Keep current,Operational maintenance scripts
+Login/Auth Testing,8,1,DELETE,TESTING,Move to archive,Debug and test scripts
+ClickSend/SMS Setup,8,3,MIGRATE,ACTIVE,Keep setup only,SMS integration setup
+System Logging,4,2,MIGRATE,ACTIVE,Keep essential,System monitoring
+S3/File Management,3,1,DELETE,OBSOLETE,Delete,Image system you confirmed obsolete
+Supabase Migrations,180,5,KEEP,ACTIVE,Keep chronological,Official database version history

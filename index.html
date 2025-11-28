@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- AGGRESSIVE CACHE PREVENTION -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0, s-maxage=0" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="-1" />
+    <meta http-equiv="Clear-Site-Data" content="cache" />
+    
+    <!-- REMOVED AUTO REFRESH -->
+    
+    <title>MusicSupplies.com</title>
+    
+    <!-- Preconnect to improve performance -->
+    <link rel="dns-prefetch" href="https://ekklokrukxmqlahtonnc.supabase.co" />
+    <link rel="dns-prefetch" href="https://mus86077.s3.amazonaws.com" />
+    
+    <!-- Google Fonts - Poppins -->
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
+    <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
+    <!-- Google Fonts disabled during dev to troubleshoot 406 errors
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    -->
+    
+    <!-- D3.js and TopoJSON for DataMaps -->
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://unpkg.com/topojson@1/dist/topojson.min.js"></script>
+    
+    <!-- EMERGENCY: AUTOMATIC SERVICE WORKER CLEARING -->
+    <script src="/sw-unregister.js"></script>
+    <script>
+      // EMERGENCY CACHE BUSTER - VERSION RC819.2025
+      const REQUIRED_VERSION = 'RC819.2025';
+      
+      // More aggressive cache clearing
+      (async function() {
+        console.log('[Emergency] Starting aggressive cache clearing...');
+        
+        // Clear all storage types
+        try {
+          if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            console.log(`[Emergency] Clearing ${cacheNames.length} caches`);
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+          }
+          
+          // Clear IndexedDB
+          if ('indexedDB' in window) {
+            indexedDB.deleteDatabase('workbox-background-sync');
+            indexedDB.deleteDatabase('music-supplies');
+          }
+          
+          // Clear local/session storage entries that might reference old code
+          Object.keys(localStorage).forEach(key => {
+            if (key.includes('workbox') || key.includes('sw-') || key.includes('cache')) {
+              localStorage.removeItem(key);
+            }
+          });
+          
+          console.log('[Emergency] Cache clearing complete');
+        } catch (error) {
+          console.error('[Emergency] Cache clearing error:', error);
+        }
+        
+        // Store current version
+        localStorage.setItem('app_version', REQUIRED_VERSION);
+        window.appVersion = Date.now();
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- TEMP: Early network logger to capture exact 406 sources before app boots -->
+    <script>
+      (function () {
+        try {
+          const debug = localStorage.getItem('NET_DEBUG') === '1' || /[?&](NET_DEBUG|debug)=1/.test(location.search);
+          if (!debug) { return; }
+          const originalFetch = window.fetch.bind(window);
+          window.fetch = async function (input, init) {
+            const url =
+              typeof input === 'string'
+                ? input
+                : input instanceof URL
+                ? input.toString()
+                : (input && input.url) || '';
+            const method =
+              typeof input === 'string' || input instanceof URL
+                ? ((init && init.method) || 'GET')
+                : ((input && input.method) || (init && init.method) || 'GET');
+
+            console.log('[EARLY][fetch][req]', method, url);
+            const res = await originalFetch(input, init);
+            console.log('[EARLY][fetch][res]', res.status, res.statusText, '-', url);
+            if (!res.ok) console.error('[EARLY][fetch][error]', res.status, res.statusText, '-', url);
+            return res;
+          };
+
+          const open = XMLHttpRequest.prototype.open;
+          const send = XMLHttpRequest.prototype.send;
+          XMLHttpRequest.prototype.open = function (method, url, async, user, password) {
+            this.__url = url;
+            this.__method = method;
+            console.log('[EARLY][xhr][req]', method, url);
+            return open.apply(this, arguments);
+          };
+          XMLHttpRequest.prototype.send = function (body) {
+            this.addEventListener('load', function () {
+              const url = this.__url;
+              const method = this.__method || '';
+              console.log('[EARLY][xhr][res]', this.status, this.statusText, '-', method, url);
+              if (this.status === 0 || this.status >= 400) {
+                console.error('[EARLY][xhr][error]', this.status, this.statusText, '-', method, url);
+              }
+            });
+            return send.apply(this, arguments);
+          };
+
+          window.addEventListener(
+            'error',
+            function (ev) {
+              const t = ev.target;
+              const tag = t && t.tagName;
+              const url = (t && (t.src || t.href)) || '';
+              if (url && (tag === 'IMG' || tag === 'SCRIPT' || tag === 'LINK')) {
+                console.error('[EARLY][resource][error]', tag, url);
+              }
+            },
+            true
+          );
+        } catch (e) {
+          console.warn('[EARLY][logger] install failed', e);
+        }
+      })();
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- ALL AUTO-REFRESH DISABLED -->
+  </body>
+</html>

@@ -1,0 +1,16 @@
+# Exclude static assets from SPA redirect
+/assets/*  /assets/:splat  200
+/*.js      /:splat.js      200
+/*.css     /:splat.css     200
+/*.png     /:splat.png     200
+/*.jpg     /:splat.jpg     200
+/*.jpeg    /:splat.jpeg    200
+/*.gif     /:splat.gif     200
+/*.svg     /:splat.svg     200
+/*.ico     /:splat.ico     200
+/*.woff    /:splat.woff    200
+/*.woff2   /:splat.woff2   200
+/*.map     /:splat.map     200
+
+# SPA fallback - must be last
+/*         /index.html     200

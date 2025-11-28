@@ -1,0 +1,88 @@
+import fetch from 'node-fetch';
+
+const SUPABASE_URL = 'https://ekklokrukxmqlahtonnc.supabase.co';
+const ACCESS_TOKEN = 'sbp_1ce547e121489d8d64f4054ea57392e525ac6bc8';
+
+console.log('\n=== FIXING PETER STAFF AUTHENTICATION ===\n');
+
+// Step 1: Check Peter in accounts_lcmd BEFORE deletion
+console.log('Step 1: Checking for Peter in accounts_lcmd...');
+
+const checkResponse = await fetch(
+  `${SUPABASE_URL}/rest/v1/accounts_lcmd?account_number=ilike.peter&select=account_number,acct_name,is_special_admin`,
+  {
+    headers: {
+      'Authorization': `Bearer ${ACCESS_TOKEN}`,
+      'apikey': ACCESS_TOKEN,
+      'Content-Type': 'application/json'
+    }
+  }
+);
+
+if (!checkResponse.ok) {
+  console.error('❌ Error checking accounts_lcmd:', await checkResponse.text());
+  process.exit(1);
+}
+
+const beforeData = await checkResponse.json();
+
+if (beforeData && beforeData.length > 0) {
+  console.log('✅ Found Peter in accounts_lcmd:', beforeData);
+  console.log('\nStep 2: Deleting Peter from accounts_lcmd...');
+  
+  const deleteResponse = await fetch(
+    `${SUPABASE_URL}/rest/v1/accounts_lcmd?account_number=ilike.peter`,
+    {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${ACCESS_TOKEN}`,
+        'apikey': ACCESS_TOKEN,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+  
+  if (!deleteResponse.ok) {
+    console.error('❌ Error deleting Peter:', await deleteResponse.text());
+    process.exit(1);
+  }
+  
+  console.log('✅ Peter deleted from accounts_lcmd');
+} else {
+  console.log('ℹ️  Peter not found in accounts_lcmd (already deleted or never existed)');
+}
+
+// Step 3: Verify Peter still exists in staff_management
+console.log('\nStep 3: Verifying Peter still exists in staff_management...');
+
+const staffResponse = await fetch(
+  `${SUPABASE_URL}/rest/v1/staff_management?username=ilike.peter&select=username,user_full_name,security_level,is_active`,
+  {
+    headers: {
+      'Authorization': `Bearer ${ACCESS_TOKEN}`,
+      'apikey': ACCESS_TOKEN,
+      'Content-Type': 'application/json'
+    }
+  }
+);
+
+if (!staffResponse.ok) {
+  console.error('❌ Error checking staff_management:', await staffResponse.text());
+  process.exit(1);
+}
+
+const staffData = await staffResponse.json();
+
+if (staffData && staffData.length > 0) {
+  console.log('✅ Peter exists in staff_management:', staffData);
+} else {
+  console.error('❌ WARNING: Peter NOT found in staff_management!');
+  process.exit(1);
+}
+
+console.log('\n=== FIX COMPLETE ===');
+console.log('\nNext steps:');
+console.log('1. Have Peter LOGOUT from the application');
+console.log('2. Have Peter LOGIN again with username "peter" and password');
+console.log('3. Check browser console - you should see staff authentication logs');
+console.log('4. Navigate to Prospects page - should work now!\n');

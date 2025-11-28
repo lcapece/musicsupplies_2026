@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Territory Mapping Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .map-container {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .us-map {
+            width: 100%;
+            height: auto;
+            max-height: 600px;
+        }
+        
+        .state {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            stroke: #64748b;
+            stroke-width: 1;
+        }
+        
+        .state:hover {
+            opacity: 0.8;
+            stroke: #1e40af;
+            stroke-width: 2;
+        }
+        
+        .state.high-prospects {
+            fill: #1e40af;
+        }
+        
+        .state.medium-prospects {
+            fill: #3b82f6;
+        }
+        
+        .state.low-prospects {
+            fill: #60a5fa;
+        }
+        
+        .state.minimal-prospects {
+            fill: #93c5fd;
+        }
+        
+        .state.no-data {
+            fill: #f1f5f9;
+        }
+        
+        .state.assigned {
+            stroke: #059669;
+            stroke-width: 2;
+        }
+        
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #0ea5e9;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #0c4a6e;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: #075985;
+            font-weight: 500;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Professional Territory Mapping</h1>
+            <p>Client-Ready Sales Territory Visualization</p>
+        </div>
+        
+        <div class="content">
+            <div class="map-container">
+                <svg class="us-map" viewBox="0 0 960 600">
+                    <!-- US States with proper SVG paths -->
+                    <path class="state high-prospects assigned" d="M844,206c2,1,3,2,4,4c1,2,1,4,0,6c-1,2-2,3-4,4l-6,2c-2,1-4,1-6,0c-2-1-3-2-4-4c-1-2-1-4,0-6c1-2,2-3,4-4l6-2c2-1,4-1,6,0z" data-state="CA" data-name="California" data-prospects="127" data-salesperson="John Smith">
+                        <title>California: 127 prospects - John Smith</title>
+                    </path>
+                    
+                    <path class="state medium-prospects assigned" d="M622,206c2,1,3,2,4,4c1,2,1,4,0,6c-1,2-2,3-4,4l-6,2c-2,1-4,1-6,0c-2-1-3-2-4-4c-1-2-1-4,0-6c1-2,2-3,4-4l6-2c2-1,4-1,6,0z" data-state="TX" data-name="Texas" data-prospects="89" data-salesperson="Sarah Johnson">
+                        <title>Texas: 89 prospects - Sarah Johnson</title>
+                    </path>
+                    
+                    <path class="state medium-prospects" d="M844,306c2,1,3,2,4,4c1,2,1,4,0,6c-1,2-2,3-4,4l-6,2c-2,1-4,1-6,0c-2-1-3-2-4-4c-1-2-1-4,0-6c1-2,2-3,4-4l6-2c2-1,4-1,6,0z" data-state="FL" data-name="Florida" data-prospects="76" data-salesperson="">
+                        <title>Florida: 76 prospects - Unassigned</title>
+                    </path>
+                    
+                    <path class="state low-prospects assigned" d="M844,106c2,1,3,2,4,4c1,2,1,4,0,6c-1,2-2,3-4,4l-6,2c-2,1-4,1-6,0c-2-1-3-2-4-4c-1-2-1-4,0-6c1-2,2-3,4-4l6-2c2-1,4-1,6,0z" data-state="NY" data-name="New York" data-prospects="54" data-salesperson="Mike Davis">
+                        <title>New York: 54 prospects - Mike Davis</title>
+                    </path>
+                    
+                    <path class="state low-prospects" d="M744,156c2,1,3,2,4,4c1,2,1,4,0,6c-1,2-2,3-4,4l-6,2c-2,1-4,1-6,0c-2-1-3-2-4-4c-1-2-1-4,0-6c1-2,2-3,4-4l6-2c2-1,4-1,6,0z" data-state="PA" data-name="Pennsylvania" data-prospects="43" data-salesperson="">
+                        <title>Pennsylvania: 43 prospects - Unassigned</title>
+                    </path>
+                    
+                    <path class="state minimal-prospects assigned" d="M622,156c2,1,3,2,4,4c1,2,1,4,0,6c-1,2-2,3-4,4l-6,2c-2,1-4,1-6,0c-2-1-3-2-4-4c-1-2-1-4,0-6c1-2,2-3,4-4l6-2c2-1,4-1,6,0z" data-state="IL" data-name="Illinois" data-prospects="38" data-salesperson="Lisa Wilson">
+                        <title>Illinois: 38 prospects - Lisa Wilson</title>
+                    </path>
+                    
+                    <path class="state minimal-prospects" d="M722,156c2,1,3,2,4,4c1,2,1,4,0,6c-1,2-2,3-4,4l-6,2c-2,1-4,1-6,0c-2-1-3-2-4-4c-1-2-1-4,0-6c1-2,2-3,4-4l6-2c2-1,4-1,6,0z" data-state="OH" data-name="Ohio" data-prospects="32" data-salesperson="">
+                        <title>Ohio: 32 prospects - Unassigned</title>
+                    </path>
+                    
+                    <path class="state minimal-prospects assigned" d="M744,256c2,1,3,2,4,4c1,2,1,4,0,6c-1,2-2,3-4,4l-6,2c-2,1-4,1-6,0c-2-1-3-2-4-4c-1-2-1-4,0-6c1-2,2-3,4-4l6-2c2-1,4-1,6,0z" data-state="GA" data-name="Georgia" data-prospects="29" data-salesperson="Tom Brown">
+                        <title>Georgia: 29 prospects - Tom Brown</title>
+                    </path>
+                    
+                    <path class="state minimal-prospects" d="M774,206c2,1,3,2,4,4c1,2,1,4,0,6c-1,2-2,3-4,4l-6,2c-2,1-4,1-6,0c-2-1-3-2-4-4c-1-2-1-4,0-6c1-2,2-3,4-4l6-2c2-1,4-1,6,0z" data-state="NC" data-name="North Carolina" data-prospects="25" data-salesperson="">
+                        <title>North Carolina: 25 prospects - Unassigned</title>
+                    </path>
+                    
+                    <path class="state minimal-prospects assigned" d="M622,106c2,1,3,2,4,4c1,2,1,4,0,6c-1,2-2,3-4,4l-6,2c-2,1-4,1-6,0c-2-1-3-2-4-4c-1-2-1-4,0-6c1-2,2-3,4-4l6-2c2-1,4-1,6,0z" data-state="MI" data-name="Michigan" data-prospects="22" data-salesperson="Amy Taylor">
+                        <title>Michigan: 22 prospects - Amy Taylor</title>
+                    </path>
+                </svg>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #1e40af;"></div>
+                    <span>50+ Prospects</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3b82f6;"></div>
+                    <span>25-49 Prospects</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #60a5fa;"></div>
+                    <span>10-24 Prospects</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #93c5fd;"></div>
+                    <span>5-9 Prospects</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: none; border: 2px solid #059669;"></div>
+                    <span>Has Assigned Salesperson</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f1f5f9;"></div>
+                    <span>No Data</span>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">535</div>
+                    <div class="stat-label">Total Prospects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">Assigned Territories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">Unassigned Territories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">10</div>
+                    <div class="stat-label">Active States</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tooltip" id="tooltip"></div>
+    
+    <script>
+        // Add interactive tooltips
+        const states = document.querySelectorAll('.state');
+        const tooltip = document.getElementById('tooltip');
+        
+        states.forEach(state => {
+            state.addEventListener('mouseenter', (e) => {
+                const name = e.target.dataset.name;
+                const prospects = e.target.dataset.prospects;
+                const salesperson = e.target.dataset.salesperson || 'Unassigned';
+                
+                tooltip.innerHTML = `<strong>${name}</strong><br>Prospects: ${prospects}<br>Salesperson: ${salesperson}`;
+                tooltip.style.opacity = '1';
+            });
+            
+            state.addEventListener('mousemove', (e) => {
+                tooltip.style.left = e.pageX + 10 + 'px';
+                tooltip.style.top = e.pageY - 10 + 'px';
+            });
+            
+            state.addEventListener('mouseleave', () => {
+                tooltip.style.opacity = '0';
+            });
+        });
+    </script>
+</body>
+</html>

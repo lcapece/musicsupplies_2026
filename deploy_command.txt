@@ -1,0 +1,1 @@
+npx supabase functions deploy admin-2fa-handler --project-ref ekklokrukxmqlahtonnc

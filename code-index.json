@@ -1,0 +1,4377 @@
+{
+  "generatedAt": "2025-08-19T15:59:32.905Z",
+  "root": "C:/Users/ryanh/rc10/musicsupplies_rc10",
+  "summary": {
+    "totalFiles": 265,
+    "byCategory": {
+      "frontend": 106,
+      "edge_function": 16,
+      "migration": 143
+    },
+    "byExt": {
+      ".tsx": 84,
+      ".ts": 38,
+      ".sql": 143
+    },
+    "edgeFunctions": [
+      "assign-introductory-promo-to-account",
+      "authenticate-with-master-password",
+      "cleanup-abandoned-orders",
+      "generate-pdf-invoice",
+      "get-applicable-intro-promo",
+      "get-promotional-offers-status",
+      "list-s3-files",
+      "list-s3-images",
+      "log-event",
+      "process-sms-queue",
+      "record-intro-promo-usage",
+      "send-admin-sms",
+      "send-customer-sms",
+      "send-mailgun-email",
+      "send-order-sms"
+    ],
+    "migrations": 143
+  },
+  "items": [
+    {
+      "path": "src/App.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 16135,
+      "lines": 467,
+      "defaultExport": true,
+      "defaultName": "App",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/AccountSettingsModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 31372,
+      "lines": 745,
+      "defaultExport": true,
+      "defaultName": "AccountSettingsModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/ActiveDiscountDisplayModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 2279,
+      "lines": 74,
+      "defaultExport": true,
+      "defaultName": "ActiveDiscountDisplayModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/AccountApplicationsTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 18211,
+      "lines": 442,
+      "defaultExport": true,
+      "defaultName": "AccountApplicationsTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/AccountsTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 26785,
+      "lines": 648,
+      "defaultExport": true,
+      "defaultName": "AccountsTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/AddPromoCodeModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 14405,
+      "lines": 353,
+      "defaultExport": true,
+      "defaultName": "AddPromoCodeModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/AdminPasswordManager.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 8936,
+      "lines": 244,
+      "defaultExport": true,
+      "defaultName": "AdminPasswordManager",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/CategoryManagementTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 6291,
+      "lines": 160,
+      "defaultExport": true,
+      "defaultName": "CategoryManagementTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/ClickSendTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 8987,
+      "lines": 248,
+      "defaultExport": true,
+      "defaultName": "ClickSendTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/DataSyncTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 12078,
+      "lines": 307,
+      "defaultExport": true,
+      "defaultName": "DataSyncTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/DiscountManagementTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 24305,
+      "lines": 324,
+      "defaultExport": true,
+      "defaultName": "DiscountManagementTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/EditPromoCodeModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 11893,
+      "lines": 359,
+      "defaultExport": true,
+      "defaultName": "EditPromoCodeModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/EmailTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 25198,
+      "lines": 644,
+      "defaultExport": true,
+      "defaultName": "EmailTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/GeneralSettingsTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 30938,
+      "lines": 784,
+      "defaultExport": true,
+      "defaultName": "GeneralSettingsTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/HistoryTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 18221,
+      "lines": 435,
+      "defaultExport": true,
+      "defaultName": "HistoryTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/IconGenerationTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 9421,
+      "lines": 237,
+      "defaultExport": true,
+      "defaultName": "IconGenerationTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/ImageManagementTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 13892,
+      "lines": 377,
+      "defaultExport": true,
+      "defaultName": "ImageManagementTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/InvoiceManagementTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 11402,
+      "lines": 320,
+      "defaultExport": true,
+      "defaultName": "InvoiceManagementTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/ManagementTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 14347,
+      "lines": 380,
+      "defaultExport": true,
+      "defaultName": "ManagementTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/ManageTreeviewTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 25560,
+      "lines": 556,
+      "defaultExport": true,
+      "defaultName": "ManageTreeviewTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/MasterPasswordTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 9039,
+      "lines": 223,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "MasterPasswordTab"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/MissingSubgroupsTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 19004,
+      "lines": 498,
+      "defaultExport": true,
+      "defaultName": "MissingSubgroupsTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/NetlifyTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 12295,
+      "lines": 349,
+      "defaultExport": true,
+      "defaultName": "NetlifyTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/OrderHistoryTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 34002,
+      "lines": 872,
+      "defaultExport": true,
+      "defaultName": "OrderHistoryTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/OrderManagementTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 16010,
+      "lines": 420,
+      "defaultExport": true,
+      "defaultName": "OrderManagementTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/ProductGroupManagementTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 8061,
+      "lines": 214,
+      "defaultExport": true,
+      "defaultName": "ProductGroupManagementTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/ProductManagementTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 17816,
+      "lines": 484,
+      "defaultExport": true,
+      "defaultName": "ProductManagementTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/ProductsTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 14202,
+      "lines": 357,
+      "defaultExport": true,
+      "defaultName": "ProductsTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/PromoCodeManagementTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 32860,
+      "lines": 807,
+      "defaultExport": true,
+      "defaultName": "PromoCodeManagementTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/S3ImageCacheTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 15835,
+      "lines": 426,
+      "defaultExport": true,
+      "defaultName": "S3ImageCacheTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/SimplePasswordChanger.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 9103,
+      "lines": 266,
+      "defaultExport": true,
+      "defaultName": "SimplePasswordChanger",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/SiteStatusTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 13806,
+      "lines": 355,
+      "defaultExport": true,
+      "defaultName": "SiteStatusTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/SystemAnalyticsTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 9859,
+      "lines": 253,
+      "defaultExport": true,
+      "defaultName": "SystemAnalyticsTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/UnresolvedIssuesTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 10332,
+      "lines": 294,
+      "defaultExport": true,
+      "defaultName": "UnresolvedIssuesTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/admin/WebOrdersTab.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 14366,
+      "lines": 407,
+      "defaultExport": true,
+      "defaultName": "WebOrdersTab",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/AdminPasswordManager.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 7378,
+      "lines": 195,
+      "defaultExport": true,
+      "defaultName": "AdminPasswordManager",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/CategoryTree.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 6974,
+      "lines": 213,
+      "defaultExport": true,
+      "defaultName": "CategoryTree",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [
+        "CategorySelection"
+      ],
+      "reexports": []
+    },
+    {
+      "path": "src/components/ChatWidget.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 18392,
+      "lines": 533,
+      "defaultExport": true,
+      "defaultName": "ChatWidget",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/ContactInfoModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 15465,
+      "lines": 429,
+      "defaultExport": true,
+      "defaultName": "ContactInfoModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/Dashboard.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 23056,
+      "lines": 480,
+      "defaultExport": true,
+      "defaultName": "Dashboard",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/DeactivatedAccountModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 2600,
+      "lines": 90,
+      "defaultExport": true,
+      "defaultName": "DeactivatedAccountModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/DemoModeBanner.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 1532,
+      "lines": 50,
+      "defaultExport": true,
+      "defaultName": "DemoModeBanner",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/DiscountFormModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 11493,
+      "lines": 294,
+      "defaultExport": true,
+      "defaultName": "DiscountFormModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/EnhancedChatWidget.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 19940,
+      "lines": 544,
+      "defaultExport": true,
+      "defaultName": "EnhancedChatWidget",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/ErrorBoundary.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 5918,
+      "lines": 157,
+      "defaultExport": true,
+      "defaultName": "ErrorBoundary",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/Header.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 6793,
+      "lines": 168,
+      "defaultExport": true,
+      "defaultName": "Header",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/Login.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 19944,
+      "lines": 444,
+      "defaultExport": true,
+      "defaultName": "Login",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/LoginFixBanner.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 2440,
+      "lines": 75,
+      "defaultExport": true,
+      "defaultName": "LoginFixBanner",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/NotificationModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 3492,
+      "lines": 119,
+      "defaultExport": true,
+      "defaultName": "NotificationModal",
+      "namedExports": [],
+      "types": [
+        "NotificationType"
+      ],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/OrderConfirmationModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 7399,
+      "lines": 171,
+      "defaultExport": true,
+      "defaultName": "OrderConfirmationModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/PasswordChangeModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 15233,
+      "lines": 386,
+      "defaultExport": true,
+      "defaultName": "PasswordChangeModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/ProductImportModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 2854,
+      "lines": 96,
+      "defaultExport": true,
+      "defaultName": "ProductImportModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [
+        "ImportStepStatus"
+      ],
+      "reexports": []
+    },
+    {
+      "path": "src/components/ProductTable.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 23182,
+      "lines": 520,
+      "defaultExport": true,
+      "defaultName": "ProductTable",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/PromoCodePopup.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 11262,
+      "lines": 256,
+      "defaultExport": true,
+      "defaultName": "PromoCodePopup",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/PromotionalPopupModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 4473,
+      "lines": 115,
+      "defaultExport": true,
+      "defaultName": "PromotionalPopupModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [
+        "PromotionalOffersStatus"
+      ],
+      "reexports": []
+    },
+    {
+      "path": "src/components/QuantitySelector.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 10582,
+      "lines": 329,
+      "defaultExport": true,
+      "defaultName": "QuantitySelector",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/SearchBar.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 4723,
+      "lines": 112,
+      "defaultExport": true,
+      "defaultName": "SearchBar",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/ShoppingCart.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 48172,
+      "lines": 995,
+      "defaultExport": true,
+      "defaultName": "ShoppingCart",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/SiteStatusOffline.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 2281,
+      "lines": 65,
+      "defaultExport": true,
+      "defaultName": "SiteStatusOffline",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/SmsConsentModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 12797,
+      "lines": 283,
+      "defaultExport": true,
+      "defaultName": "SmsConsentModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/SmsFailureNotificationModal.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 6436,
+      "lines": 169,
+      "defaultExport": true,
+      "defaultName": "SmsFailureNotificationModal",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/components/VersionCheck.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 2775,
+      "lines": 96,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/context/AuthContext.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 45233,
+      "lines": 1119,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "useAuth"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/context/CartContext.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 28385,
+      "lines": 717,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "useCart"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/context/NotificationContext.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 2642,
+      "lines": 81,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "useNotification"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/data/categoryTree.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 5527,
+      "lines": 169,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "fetchCategoryData",
+        "buildCategoryTreeFromSimpleStructure",
+        "buildCategoryTree"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/data/mockData.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 8360,
+      "lines": 174,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "buildCategoryTree",
+        "getProductsByCategory",
+        "searchProducts",
+        "searchCategories",
+        "validateLogin"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/lib/errorReporting.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 3621,
+      "lines": 117,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "sendErrorNotificationSMS",
+        "reportError",
+        "reportReactError",
+        "setupGlobalErrorHandling"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/lib/supabase.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 983,
+      "lines": 36,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "supabase"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/main.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 737,
+      "lines": 24,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/AdminAccountApplicationsPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 14141,
+      "lines": 286,
+      "defaultExport": true,
+      "defaultName": "AdminAccountApplicationsPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/AdminChatManagementPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 33516,
+      "lines": 849,
+      "defaultExport": true,
+      "defaultName": "AdminChatManagementPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/AdminDashboard.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 7679,
+      "lines": 183,
+      "defaultExport": true,
+      "defaultName": "AdminDashboard",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/AdminKnowledgeBase.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 23155,
+      "lines": 548,
+      "defaultExport": true,
+      "defaultName": "AdminKnowledgeBase",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/ChatPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 5789,
+      "lines": 120,
+      "defaultExport": true,
+      "defaultName": "ChatPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/CustomerAccountPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 21784,
+      "lines": 623,
+      "defaultExport": true,
+      "defaultName": "CustomerAccountPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/Dashboard.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 44743,
+      "lines": 957,
+      "defaultExport": true,
+      "defaultName": "Dashboard",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/EmailCommunicationsPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 4968,
+      "lines": 87,
+      "defaultExport": true,
+      "defaultName": "EmailCommunicationsPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/ForgotPasswordPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 19893,
+      "lines": 533,
+      "defaultExport": true,
+      "defaultName": "ForgotPasswordPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/NewAccountApplicationPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 20484,
+      "lines": 453,
+      "defaultExport": true,
+      "defaultName": "NewAccountApplicationPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/OrderHistory.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 31934,
+      "lines": 769,
+      "defaultExport": true,
+      "defaultName": "OrderHistory",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/PrivacyPolicyPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 16366,
+      "lines": 140,
+      "defaultExport": true,
+      "defaultName": "PrivacyPolicyPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/SkuImportPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 9487,
+      "lines": 260,
+      "defaultExport": true,
+      "defaultName": "SkuImportPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/SmsCommunicationsPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 6033,
+      "lines": 91,
+      "defaultExport": true,
+      "defaultName": "SmsCommunicationsPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/SmsConsentPreviewPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 12172,
+      "lines": 232,
+      "defaultExport": true,
+      "defaultName": "SmsConsentPreviewPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/TermsAndConditionsPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 11576,
+      "lines": 200,
+      "defaultExport": true,
+      "defaultName": "TermsAndConditionsPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/UpdatePasswordPage.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 13263,
+      "lines": 349,
+      "defaultExport": true,
+      "defaultName": "UpdatePasswordPage",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/pages/WebOrdersDisplay.tsx",
+      "ext": ".tsx",
+      "category": "frontend",
+      "size": 15688,
+      "lines": 386,
+      "defaultExport": true,
+      "defaultName": "WebOrdersDisplay",
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/services/activityTracker.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 11367,
+      "lines": 361,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "activityTracker"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/services/aiChatService.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 19259,
+      "lines": 576,
+      "defaultExport": true,
+      "defaultName": "AIChatService",
+      "namedExports": [
+        "aiChatService"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/services/secureVoiceService.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 9391,
+      "lines": 351,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "secureVoiceService"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/types/index.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 4105,
+      "lines": 142,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [
+        "Category",
+        "Product",
+        "CartItem",
+        "Account",
+        "User",
+        "ProductGroup",
+        "OrderConfirmationDetails",
+        "RtExtended",
+        "PromoCode",
+        "PromoCodeUsage",
+        "PromoCodeValidity",
+        "PromoCodeSummary",
+        "AvailablePromoCode"
+      ],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/adminSessionManager.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 2042,
+      "lines": 69,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "AdminSessionManager",
+        "adminSessionManager"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/applyMigration.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 25305,
+      "lines": 668,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "applyFixedAuthFunctionMigration",
+        "applyPasswordRulesMigration",
+        "applyTreeViewMigration",
+        "applyBrandMapColumnsMigration",
+        "applyPromoCodeFunctionMigration",
+        "applyAccount99Migration"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/applyPromoCodeLimitsUpdates.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 4093,
+      "lines": 115,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "applyPromoCodeLimitsUpdates"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/checkDbUpdate.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 890,
+      "lines": 28,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "checkDbUpdate"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/eventLogger.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 11511,
+      "lines": 386,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "logEvent",
+        "logLoginSuccess",
+        "logLoginFailure",
+        "logSessionExpired",
+        "logKeywordSearch",
+        "logNavTreeSearch",
+        "logItemAddedToCart",
+        "logItemRemovedFromCart",
+        "logCartView",
+        "logCheckoutStarted",
+        "logCheckoutCompleted",
+        "logCheckoutFailed",
+        "logPasswordChanged",
+        "logAdminPasswordChanged",
+        "logPasswordSetToDefaultZip"
+      ],
+      "types": [
+        "EventType",
+        "AuthMethod"
+      ],
+      "interfaces": [
+        "LogEventOptions"
+      ],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/iconGenerator.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 7795,
+      "lines": 210,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "IconGenerator",
+        "updateCategoryTreeWithGeneratedIcons",
+        "runIconGeneration"
+      ],
+      "types": [],
+      "interfaces": [
+        "CategoryIconRequest"
+      ],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/invoiceGenerator.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 21920,
+      "lines": 475,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "generateInvoiceHTML",
+        "generateInvoiceText",
+        "createInvoiceDataFromOrder"
+      ],
+      "types": [],
+      "interfaces": [
+        "InvoiceData",
+        "CompanyInfo"
+      ],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/secureErrorHandler.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 7405,
+      "lines": 255,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "handleError",
+        "logSecureError",
+        "createErrorResponse",
+        "withErrorHandling",
+        "handleReactError",
+        "setupSecureErrorHandling"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/securityConfig.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 3732,
+      "lines": 144,
+      "defaultExport": true,
+      "defaultName": "SECURITY_CONFIG",
+      "namedExports": [
+        "SecurityUtils",
+        "SECURITY_CONFIG"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/securityHeaders.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 4786,
+      "lines": 155,
+      "defaultExport": true,
+      "defaultName": "SecurityHeadersManager",
+      "namedExports": [
+        "SecurityHeadersManager"
+      ],
+      "types": [],
+      "interfaces": [
+        "SecurityHeaders"
+      ],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/securityMonitor.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 3945,
+      "lines": 148,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "securityMonitor"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/sessionManager.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 5464,
+      "lines": 219,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "SessionManager",
+        "sessionManager"
+      ],
+      "types": [],
+      "interfaces": [
+        "SessionData"
+      ],
+      "reexports": []
+    },
+    {
+      "path": "src/utils/validation.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 8592,
+      "lines": 271,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "InputValidator",
+        "validateEmail",
+        "validatePhone",
+        "validateAccountNumber",
+        "validatePromoCode",
+        "validateQuantity",
+        "sanitizeText",
+        "validatePassword",
+        "validatePartNumber",
+        "validateAmount",
+        "validateSearchQuery"
+      ],
+      "types": [],
+      "interfaces": [
+        "ValidationResult"
+      ],
+      "reexports": []
+    },
+    {
+      "path": "src/vite-env.d.ts",
+      "ext": ".ts",
+      "category": "frontend",
+      "size": 39,
+      "lines": 2,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "supabase/functions/assign-introductory-promo-to-account/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 2887,
+      "lines": 81,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "assign-introductory-promo-to-account"
+    },
+    {
+      "path": "supabase/functions/authenticate-with-master-password/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 11714,
+      "lines": 342,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "authenticate-with-master-password"
+    },
+    {
+      "path": "supabase/functions/cleanup-abandoned-orders/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 1596,
+      "lines": 57,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "cleanup-abandoned-orders"
+    },
+    {
+      "path": "supabase/functions/generate-pdf-invoice/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 15171,
+      "lines": 358,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "generate-pdf-invoice"
+    },
+    {
+      "path": "supabase/functions/get-applicable-intro-promo/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 3165,
+      "lines": 89,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "get-applicable-intro-promo"
+    },
+    {
+      "path": "supabase/functions/get-promotional-offers-status/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 7098,
+      "lines": 166,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "get-promotional-offers-status"
+    },
+    {
+      "path": "supabase/functions/list-s3-files/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 3657,
+      "lines": 114,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "list-s3-files"
+    },
+    {
+      "path": "supabase/functions/list-s3-images/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 3290,
+      "lines": 121,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "list-s3-images"
+    },
+    {
+      "path": "supabase/functions/log-event/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 7593,
+      "lines": 228,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "log-event"
+    },
+    {
+      "path": "supabase/functions/process-sms-queue/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 4525,
+      "lines": 157,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "process-sms-queue"
+    },
+    {
+      "path": "supabase/functions/record-intro-promo-usage/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 3451,
+      "lines": 93,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "record-intro-promo-usage"
+    },
+    {
+      "path": "supabase/functions/send-admin-sms/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 5223,
+      "lines": 173,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "send-admin-sms"
+    },
+    {
+      "path": "supabase/functions/send-customer-sms/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 3137,
+      "lines": 97,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "send-customer-sms"
+    },
+    {
+      "path": "supabase/functions/send-mailgun-email/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 6635,
+      "lines": 209,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "send-mailgun-email"
+    },
+    {
+      "path": "supabase/functions/send-order-sms/index.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 2386,
+      "lines": 71,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [],
+      "types": [],
+      "interfaces": [],
+      "reexports": [],
+      "edgeFunctionName": "send-order-sms"
+    },
+    {
+      "path": "supabase/functions/_shared/cors.ts",
+      "ext": ".ts",
+      "category": "edge_function",
+      "size": 294,
+      "lines": 7,
+      "defaultExport": false,
+      "defaultName": null,
+      "namedExports": [
+        "corsHeaders"
+      ],
+      "types": [],
+      "interfaces": [],
+      "reexports": []
+    },
+    {
+      "path": "supabase/migrations/20240813_chat_config_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1505,
+      "lines": 33,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20240813_create_knowledge_base.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3948,
+      "lines": 79,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "idx_knowledge_keywords"
+        },
+        {
+          "type": "index",
+          "name": "idx_knowledge_category"
+        },
+        {
+          "type": "index",
+          "name": "idx_knowledge_active"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250516161459_wooden_plain.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1096,
+      "lines": 36,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "for"
+        },
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250516164846_gentle_truth.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1317,
+      "lines": 46,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "for"
+        },
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250516184252_summer_boat.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 538,
+      "lines": 22,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250517181000_add_test_accounts.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1750,
+      "lines": 63,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "for"
+        },
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250517181100_create_production_ordhist.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 967,
+      "lines": 42,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "for"
+        },
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250517184100_add_test_orders.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1794,
+      "lines": 27,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250517210551_long_cottage.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1711,
+      "lines": 53,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "for"
+        },
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250530174500_create_logon_lcmd_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 5073,
+      "lines": 166,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "for"
+        },
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250530181600_fix_account_101_data.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 888,
+      "lines": 34,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250601061500_create_sms_verification_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2995,
+      "lines": 109,
+      "sqlObjects": [
+        {
+          "type": "function",
+          "name": "to"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "for"
+        },
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250602154500_add_password_hashing.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 5339,
+      "lines": 165,
+      "sqlObjects": [
+        {
+          "type": "extension",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250602155000_add_admin_account.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 547,
+      "lines": 15,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250602160000_create_admin_backend.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3828,
+      "lines": 111,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "function",
+          "name": "for"
+        },
+        {
+          "type": "trigger",
+          "name": "set_timestamp_lcmd_discount"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250603100000_fix_default_password_logic.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3665,
+      "lines": 106,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250603140000_update_products_to_two_level_structure.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 916,
+      "lines": 23,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250603143000_fix_requires_password_change_null.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3284,
+      "lines": 96,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250603145000_drop_old_authenticate_function.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 330,
+      "lines": 10,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250603151000_fix_missing_rls_policies.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 602,
+      "lines": 22,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250603152000_fix_rls_policies_for_custom_auth.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1070,
+      "lines": 38,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250604120000_add_order_based_discounts.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1634,
+      "lines": 33,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"System"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250604130000_insert_first_orders_promo.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 514,
+      "lines": 17,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250605014900_fix_zip_code_password_logic.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3942,
+      "lines": 110,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250605020000_fix_authenticate_function_parameter_type.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2908,
+      "lines": 70,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250605021000_final_authenticate_fix.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1355,
+      "lines": 45,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250605080500_consolidate_accounts_password_logic.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 8156,
+      "lines": 199,
+      "sqlObjects": [
+        {
+          "type": "extension",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250605095500_create_unresolved_issues_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1877,
+      "lines": 46,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admins"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admins"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admins"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250605153222_little_gate.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1723,
+      "lines": 25,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250605153324_falling_trail.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1575,
+      "lines": 53,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250605153530_calm_smoke.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 6888,
+      "lines": 198,
+      "sqlObjects": [
+        {
+          "type": "extension",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250609193923_divine_fire.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 6129,
+      "lines": 164,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250609194125_dusty_mouse.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 4599,
+      "lines": 123,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250609194312_white_swamp.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 4587,
+      "lines": 125,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250609194754_orange_feather.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 4763,
+      "lines": 127,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250609194857_frosty_ember.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 5719,
+      "lines": 145,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250609195030_holy_base.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 8160,
+      "lines": 212,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250609195113_morning_villa.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 8814,
+      "lines": 230,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250609203531_late_portal.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 6314,
+      "lines": 165,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250610044026_frosty_resonance.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2583,
+      "lines": 82,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250610044741_old_resonance.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 5232,
+      "lines": 183,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        },
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250610045334_misty_tooth.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1625,
+      "lines": 40,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250610061132_rapid_ember.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1732,
+      "lines": 52,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250610113434_sunny_summit.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1502,
+      "lines": 43,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250610115000_update_webmsrp_display.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 833,
+      "lines": 33,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250610121500_create_tree_view_data_source.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 6777,
+      "lines": 153,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "trigger",
+          "name": "products_tree_view_refresh_trigger"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250610124500_create_treeview_view.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 459,
+      "lines": 17,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250610125000_fix_treeview_table_access.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 396,
+      "lines": 13,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250610131000_remove_special_account_password_rules.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1777,
+      "lines": 63,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250610131500_drop_authenticate_user_lcmd_function.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 153,
+      "lines": 3,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250610132000_create_login_activity_log_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2460,
+      "lines": 52,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250611080834_add_introductory_promo.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2833,
+      "lines": 55,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250611084754_ensure_web_orders_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3154,
+      "lines": 55,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Service"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250611103000_fix_authenticate_function_final.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2533,
+      "lines": 81,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250611_add_is_dirty_to_accounts_lcmd.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 85,
+      "lines": 3,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250611_add_rls_to_treeview_datasource.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 337,
+      "lines": 10,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250616_add_user_id_to_accounts_lcmd.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 671,
+      "lines": 15,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250617_add_rls_for_authenticated_lcmd_discount.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 152,
+      "lines": 6,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250617_add_rls_for_authenticated_pre_products_supabase.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 158,
+      "lines": 6,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250617_add_rls_for_authenticated_products_supabase.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 515,
+      "lines": 13,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250617_add_rls_for_authenticated_products_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 461,
+      "lines": 13,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250617_add_sms_consent_to_accounts_lcmd.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 216,
+      "lines": 8,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250617_fix_all_product_tables_rls.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2830,
+      "lines": 69,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250617_fix_pre_products_supabase_rls.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 919,
+      "lines": 27,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250617_fix_products_supabase_rls_public_access.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 725,
+      "lines": 15,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250617_fix_products_view_underlying_tables.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 4700,
+      "lines": 116,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250617_fix_rt_extended_bullet_points.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1697,
+      "lines": 59,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250617_troubleshoot_and_fix_product_display.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3751,
+      "lines": 103,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250620_enable_read_access_for_all_tables.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 5657,
+      "lines": 140,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250620_enable_read_access_for_all_tables_fixed.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 6238,
+      "lines": 159,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250620_fix_treeview_datasource_access.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 4618,
+      "lines": 116,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250620_fix_treeview_datasource_rls.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 758,
+      "lines": 23,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250623_add_get_all_promo_codes_function.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3252,
+      "lines": 116,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250623_consolidated_discount_changes.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 9140,
+      "lines": 281,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        },
+        {
+          "type": "trigger",
+          "name": "prevent_discount_activation"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250623_create_promo_codes_tables.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 7561,
+      "lines": 240,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250623_remove_lcmd_discount_features.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 843,
+      "lines": 25,
+      "sqlObjects": [
+        {
+          "type": "trigger",
+          "name": "prevent_discount_activation"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250627_add_email_login_to_auth_function.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2861,
+      "lines": 90,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250627_add_identifier_used_to_login_activity_log.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 122,
+      "lines": 4,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250627_update_auth_function_for_email_support.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3091,
+      "lines": 93,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250629_fix_authenticate_function_email_support.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 6841,
+      "lines": 194,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250701_add_account_99.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1286,
+      "lines": 34,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250701_add_truncate_stg_update_skus_function.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 547,
+      "lines": 18,
+      "sqlObjects": [
+        {
+          "type": "function",
+          "name": "to"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250701_create_stg_update_skus_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1931,
+      "lines": 59,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "stg_update_skus_policy"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250701_fix_auth_for_account_99.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 8847,
+      "lines": 250,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250701_update_auth_for_account_99.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 7052,
+      "lines": 201,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250702_add_brand_and_map_columns.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1177,
+      "lines": 49,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250702_add_get_best_promo_code_function.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1704,
+      "lines": 58,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250704_add_exec_sql_function.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 364,
+      "lines": 12,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250704_enhance_promo_codes_with_account_limits.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 6938,
+      "lines": 251,
+      "sqlObjects": [
+        {
+          "type": "index",
+          "name": "to"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250704_fix_promo_codes_admin_rls.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1418,
+      "lines": 37,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250704_fix_promo_codes_user_access.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2263,
+      "lines": 71,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Users"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250704_fix_promo_codes_user_access_simple.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2125,
+      "lines": 69,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Users"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250707_add_fresh_promo_codes.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 5440,
+      "lines": 165,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250707_fix_promo_codes_simple.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3543,
+      "lines": 99,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250710_add_test_promo_codes.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 958,
+      "lines": 61,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250710_debug_promo_code_validation.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 7141,
+      "lines": 258,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250710_ensure_promo_usage_function.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1948,
+      "lines": 76,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250710_fix_promo_code_functions.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 7133,
+      "lines": 242,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250711_final_promo_code_fix.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 10548,
+      "lines": 381,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        },
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        },
+        {
+          "type": "policy",
+          "name": "\"Enable"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250714_add_marketing_sms_consent_field.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 893,
+      "lines": 19,
+      "sqlObjects": [
+        {
+          "type": "index",
+          "name": "idx_accounts_lcmd_marketing_sms_consent"
+        },
+        {
+          "type": "index",
+          "name": "idx_accounts_lcmd_sms_consents"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250716_add_product_image_fallback_system.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 4680,
+      "lines": 108,
+      "sqlObjects": [
+        {
+          "type": "function",
+          "name": "to"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250717_add_promo_code_status_tracking.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 7017,
+      "lines": 238,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250724_strengthen_promo_code_single_use.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 11910,
+      "lines": 404,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250725_create_new_account_applications_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1841,
+      "lines": 64,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "new_account_applications"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        },
+        {
+          "type": "policy",
+          "name": "\"Allow"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250728_create_sms_notification_failures_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3054,
+      "lines": 114,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "to"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "idx_sms_failures_acknowledged"
+        },
+        {
+          "type": "index",
+          "name": "idx_sms_failures_order"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Service"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250728_fix_save10_single_use.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 869,
+      "lines": 29,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250728_fix_sms_failure_notifications.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 4067,
+      "lines": 148,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Service"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250729_create_user_preferences_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2594,
+      "lines": 68,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        },
+        {
+          "type": "trigger",
+          "name": "to"
+        },
+        {
+          "type": "trigger",
+          "name": "trigger_update_user_preferences_updated_at"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250802_add_mobile_phone_to_accounts.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 249,
+      "lines": 6,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250811_create_app_events.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 7644,
+      "lines": 208,
+      "sqlObjects": [
+        {
+          "type": "type",
+          "name": "public.event_type"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "service_role_all"
+        },
+        {
+          "type": "extension",
+          "name": "in"
+        },
+        {
+          "type": "extension",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250812_comprehensive_activity_tracking.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 10152,
+      "lines": 230,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250812_create_contactinfo_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 4721,
+      "lines": 113,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "trigger",
+          "name": "trigger_contactinfo_updated_at"
+        },
+        {
+          "type": "policy",
+          "name": "contactinfo_select_policy"
+        },
+        {
+          "type": "policy",
+          "name": "contactinfo_insert_policy"
+        },
+        {
+          "type": "policy",
+          "name": "contactinfo_update_policy"
+        },
+        {
+          "type": "policy",
+          "name": "contactinfo_delete_policy"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250812_create_employees_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2611,
+      "lines": 66,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "on"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "on"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "trigger",
+          "name": "trigger_employees_last_updated"
+        },
+        {
+          "type": "policy",
+          "name": "employees_select_policy"
+        },
+        {
+          "type": "policy",
+          "name": "employees_insert_policy"
+        },
+        {
+          "type": "policy",
+          "name": "employees_update_policy"
+        },
+        {
+          "type": "policy",
+          "name": "employees_delete_policy"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250812_create_shopping_activity_tracking.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 4388,
+      "lines": 113,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "idx_product_views_account"
+        },
+        {
+          "type": "index",
+          "name": "idx_product_views_timestamp"
+        },
+        {
+          "type": "index",
+          "name": "idx_product_views_product"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "idx_search_history_account"
+        },
+        {
+          "type": "index",
+          "name": "idx_search_history_timestamp"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "idx_cart_activity_account"
+        },
+        {
+          "type": "index",
+          "name": "idx_cart_activity_timestamp"
+        },
+        {
+          "type": "index",
+          "name": "idx_cart_activity_product"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250812_create_site_status_table_with_rls.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2371,
+      "lines": 70,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Anyone"
+        },
+        {
+          "type": "policy",
+          "name": "\"Only"
+        },
+        {
+          "type": "policy",
+          "name": "\"Only"
+        },
+        {
+          "type": "policy",
+          "name": "\"Only"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250812_update_upsert_contact_info_sync_accounts.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1869,
+      "lines": 54,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250813_create_shopping_activity_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2637,
+      "lines": 66,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "idx_shopping_activity_account"
+        },
+        {
+          "type": "index",
+          "name": "idx_shopping_activity_session"
+        },
+        {
+          "type": "index",
+          "name": "idx_shopping_activity_type"
+        },
+        {
+          "type": "index",
+          "name": "idx_shopping_activity_created"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admin"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250813_create_staff_table.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3849,
+      "lines": 121,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "trigger",
+          "name": "trigger_staff_updated_at"
+        },
+        {
+          "type": "policy",
+          "name": "staff_select_policy"
+        },
+        {
+          "type": "policy",
+          "name": "staff_insert_policy"
+        },
+        {
+          "type": "policy",
+          "name": "staff_update_policy"
+        },
+        {
+          "type": "policy",
+          "name": "staff_delete_policy"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250813_fix_admin_contact_info_permissions.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 7397,
+      "lines": 204,
+      "sqlObjects": [
+        {
+          "type": "policy",
+          "name": "contactinfo_select_policy"
+        },
+        {
+          "type": "policy",
+          "name": "contactinfo_insert_policy"
+        },
+        {
+          "type": "policy",
+          "name": "contactinfo_update_policy"
+        },
+        {
+          "type": "policy",
+          "name": "contactinfo_delete_policy"
+        },
+        {
+          "type": "policy",
+          "name": "accounts_lcmd_admin_policy"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250813_fix_shopping_activity_table_structure.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2672,
+      "lines": 59,
+      "sqlObjects": [
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250814_create_chat_knowledge_base.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 9453,
+      "lines": 221,
+      "sqlObjects": [
+        {
+          "type": "extension",
+          "name": "IF"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "ON"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "ON"
+        },
+        {
+          "type": "table",
+          "name": "for"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "table",
+          "name": "for"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Knowledge"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admins"
+        },
+        {
+          "type": "policy",
+          "name": "\"Anyone"
+        },
+        {
+          "type": "policy",
+          "name": "\"Users"
+        },
+        {
+          "type": "policy",
+          "name": "\"Availability"
+        },
+        {
+          "type": "policy",
+          "name": "\"Admins"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250815_order_preallocation_system.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 6346,
+      "lines": 190,
+      "sqlObjects": [
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250816_ABSOLUTE_OVERRIDE.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2680,
+      "lines": 106,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250816_add_order_and_backend_login_sms_notifications.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 11662,
+      "lines": 390,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "function",
+          "name": "to"
+        },
+        {
+          "type": "trigger",
+          "name": "for"
+        },
+        {
+          "type": "trigger",
+          "name": "trigger_notify_new_order_sms"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250816_add_sms_queue_processing_cron.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3756,
+      "lines": 131,
+      "sqlObjects": [
+        {
+          "type": "extension",
+          "name": "IF"
+        },
+        {
+          "type": "trigger",
+          "name": "for"
+        },
+        {
+          "type": "trigger",
+          "name": "trigger_notify_sms_queue"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250816_CHECK_WHAT_EXISTS.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2619,
+      "lines": 89,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250816_COMPLETE_AUTH_RESET.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 6484,
+      "lines": 246,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250816_COMPLETE_OVERRIDE.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2841,
+      "lines": 134,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250816_COMPLETE_SECURITY_LOCKDOWN.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 8721,
+      "lines": 305,
+      "sqlObjects": [
+        {
+          "type": "extension",
+          "name": "IF"
+        },
+        {
+          "type": "extension",
+          "name": "IF"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "idx_security_audit_created"
+        },
+        {
+          "type": "index",
+          "name": "idx_security_audit_event"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Service"
+        },
+        {
+          "type": "policy",
+          "name": "\"Service"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250816_CREATE_SIMPLE_BACKEND_AUTH.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 4242,
+      "lines": 170,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250816_EMERGENCY_BLOCK_MUSIC123.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 8604,
+      "lines": 282,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250816_enable_http_extension.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 1597,
+      "lines": 60,
+      "sqlObjects": [
+        {
+          "type": "extension",
+          "name": "IF"
+        },
+        {
+          "type": "extension",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250816_FIND_THE_BREACH.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2107,
+      "lines": 87,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250816_FIX_BACKEND_PASSWORD_NOW.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2494,
+      "lines": 114,
+      "sqlObjects": [
+        {
+          "type": "extension",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250816_FIX_LOGIN_PERMISSIONS.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 9023,
+      "lines": 347,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250816_FORCE_RESET_BACKEND_PASSWORD.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 6961,
+      "lines": 267,
+      "sqlObjects": [
+        {
+          "type": "extension",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250816_NUCLEAR_REMOVE_MUSIC123.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 5101,
+      "lines": 211,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250816_remove_universal_password_and_secure_auth.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 8047,
+      "lines": 261,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250816_simplified_sms_notifications.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 8436,
+      "lines": 298,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "for"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        },
+        {
+          "type": "policy",
+          "name": "\"Service"
+        },
+        {
+          "type": "trigger",
+          "name": "for"
+        },
+        {
+          "type": "trigger",
+          "name": "trigger_queue_order_sms"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250816_TOTAL_LOCKDOWN_NOW.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2984,
+      "lines": 122,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250816_TOTAL_SYSTEM_SHUTDOWN.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 3187,
+      "lines": 105,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        }
+      ]
+    },
+    {
+      "path": "supabase/migrations/20250818_FINAL_OVERRIDE_NO_MUSIC123.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 4059,
+      "lines": 155,
+      "sqlObjects": []
+    },
+    {
+      "path": "supabase/migrations/20250819_create_2fa_system.sql",
+      "ext": ".sql",
+      "category": "migration",
+      "size": 2101,
+      "lines": 81,
+      "sqlObjects": [
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "table",
+          "name": "IF"
+        },
+        {
+          "type": "index",
+          "name": "IF"
+        }
+      ]
+    }
+  ]
+}
