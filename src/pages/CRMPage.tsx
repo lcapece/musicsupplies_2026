@@ -64,7 +64,10 @@ import {
   ResponsiveContainer,
   Legend,
   Area,
-  AreaChart
+  AreaChart,
+  PieChart,
+  Pie,
+  Cell
 } from 'recharts';
 
 // ============================================
@@ -117,7 +120,7 @@ interface Contact {
   created_at: string;
 }
 
-type TabType = 'activity' | 'contacts' | 'stats';
+type TabType = 'activity' | 'contacts' | 'stats' | 'predictions' | 'crosssell' | 'categorysales';
 
 interface PendingCallback {
   id: string;
@@ -360,7 +363,8 @@ const CustomerListItem: React.FC<{
   onClick: () => void;
   hasCallback?: boolean;
   healthScore?: number;
-}> = ({ account, isSelected, onClick, hasCallback, healthScore }) => {
+  hasImminentPrediction?: boolean;
+}> = ({ account, isSelected, onClick, hasCallback, healthScore, hasImminentPrediction }) => {
   // Get churn-based background color
   const churnColor = getChurnBackgroundColor(healthScore);
 
@@ -379,15 +383,19 @@ const CustomerListItem: React.FC<{
       `}
     >
       <div className="flex items-center gap-3">
-        {/* Account Number Badge */}
+        {/* Account Number Badge - Pulsates red when prediction within ±15 days */}
         <div className={`
           px-2.5 py-1.5 rounded-lg text-xs font-semibold tabular-nums
           transition-all duration-150
-          ${isSelected
-            ? 'bg-indigo-600 text-white shadow-sm'
-            : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200'
+          ${hasImminentPrediction && !isSelected
+            ? 'account-number-pulse'
+            : isSelected
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200'
           }
-        `}>
+        `}
+        title={hasImminentPrediction ? 'Order prediction within ±15 days' : undefined}
+        >
           {account.account_number}
         </div>
 
@@ -581,29 +589,31 @@ const ActivityTab: React.FC<{
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* New Activity Form - Always Visible */}
-      <div className="px-5 py-4 bg-gray-50 border-b border-gray-200 flex-shrink-0">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900">Log New Activity</h3>
-            <p className="text-xs text-gray-500 mt-0.5">{calls.length} recorded</p>
+      {/* New Activity Form - Prominent with visual cue */}
+      <div className="px-4 py-3 bg-gradient-to-r from-indigo-50 to-blue-50 border-b-2 border-indigo-200 flex-shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-indigo-600 flex items-center justify-center">
+              <Plus className="w-4 h-4 text-white" />
+            </div>
+            <h3 className="text-sm font-semibold text-indigo-900">Log New Activity</h3>
+            <span className="text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full">{calls.length} recorded</span>
           </div>
         </div>
 
-        <div className="space-y-4">
-          {/* Outcome Selection */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-2">Outcome</label>
-            <div className="flex flex-wrap gap-2">
+        <div className="space-y-2">
+          {/* Outcome Selection - Inline */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-gray-700">Outcome:</span>
+            <div className="flex flex-wrap gap-1">
               {(['answered', 'voicemail', 'no_answer', 'busy', 'email'] as const).map(outcome => (
                 <button
                   key={outcome}
                   onClick={() => setNewCall(prev => ({ ...prev, outcome }))}
                   className={`
-                    px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150
-                    focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-indigo-500
+                    px-2 py-1 rounded text-xs font-medium transition-all duration-150
                     ${newCall.outcome === outcome
-                      ? 'bg-indigo-600 text-white shadow-sm'
+                      ? 'bg-indigo-600 text-white'
                       : 'bg-white text-gray-600 ring-1 ring-gray-300 hover:ring-gray-400'
                     }
                   `}
@@ -614,98 +624,78 @@ const ActivityTab: React.FC<{
             </div>
           </div>
 
-          {/* Notes */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-2">Notes</label>
-            <textarea
-              value={newCall.notes}
-              onChange={e => setNewCall(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="What was discussed? Key takeaways, action items..."
-              rows={3}
-              className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                placeholder:text-gray-400 resize-none transition-shadow"
-            />
-          </div>
+          {/* Notes - Compact */}
+          <textarea
+            value={newCall.notes}
+            onChange={e => setNewCall(prev => ({ ...prev, notes: e.target.value }))}
+            placeholder="Notes: What was discussed? Key takeaways..."
+            rows={2}
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm
+              focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+              placeholder:text-gray-400 resize-none"
+          />
 
-          {/* Callback Scheduling */}
-          <div className="p-4 bg-white rounded-lg border border-gray-200">
-            <label className="flex items-center gap-2 text-xs font-medium text-gray-700 mb-3">
-              <Calendar className="w-3.5 h-3.5 text-gray-500" />
-              Schedule Callback (Optional)
-            </label>
+          {/* Callback Scheduling - Compact inline */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-medium text-gray-700 flex items-center gap-1">
+              <Calendar className="w-3 h-3" /> Callback:
+            </span>
+            {[
+              { label: 'Tomorrow', days: 1 },
+              { label: '2 Days', days: 2 },
+              { label: '1 Week', days: 7 },
+              { label: '2 Wks', days: 14 },
+              { label: '1 Mo', days: 30 }
+            ].map(option => {
+              const futureDate = new Date();
+              futureDate.setDate(futureDate.getDate() + option.days);
+              const dateStr = futureDate.toISOString().split('T')[0];
+              const isSelected = newCall.callbackDate === dateStr;
 
-            {/* Quick Callback Buttons */}
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {[
-                { label: 'Tomorrow', days: 1 },
-                { label: '2 Days', days: 2 },
-                { label: '1 Week', days: 7 },
-                { label: '2 Weeks', days: 14 },
-                { label: '1 Month', days: 30 }
-              ].map(option => {
-                const futureDate = new Date();
-                futureDate.setDate(futureDate.getDate() + option.days);
-                const dateStr = futureDate.toISOString().split('T')[0];
-                const isSelected = newCall.callbackDate === dateStr;
-
-                return (
-                  <button
-                    key={option.label}
-                    type="button"
-                    onClick={() => setNewCall(prev => ({
-                      ...prev,
-                      callbackDate: isSelected ? '' : dateStr,
-                      callbackTime: isSelected ? '' : (prev.callbackTime || '09:00')
-                    }))}
-                    className={`
-                      px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150
-                      ${isSelected
-                        ? 'bg-indigo-100 text-indigo-700 ring-1 ring-indigo-600/30'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }
-                    `}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="date"
-                value={newCall.callbackDate}
-                onChange={e => setNewCall(prev => ({ ...prev, callbackDate: e.target.value }))}
-                className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm
-                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-              <input
-                type="time"
-                value={newCall.callbackTime}
-                onChange={e => setNewCall(prev => ({ ...prev, callbackTime: e.target.value }))}
-                className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm
-                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
+              return (
+                <button
+                  key={option.label}
+                  type="button"
+                  onClick={() => setNewCall(prev => ({
+                    ...prev,
+                    callbackDate: isSelected ? '' : dateStr,
+                    callbackTime: isSelected ? '' : (prev.callbackTime || '09:00')
+                  }))}
+                  className={`
+                    px-2 py-0.5 rounded text-xs font-medium transition-all
+                    ${isSelected
+                      ? 'bg-indigo-100 text-indigo-700 ring-1 ring-indigo-600/30'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }
+                  `}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
             <input
-              type="text"
-              value={newCall.callbackReason}
-              onChange={e => setNewCall(prev => ({ ...prev, callbackReason: e.target.value }))}
-              placeholder="Callback reason..."
-              className="w-full mt-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm
-                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400"
+              type="date"
+              value={newCall.callbackDate}
+              onChange={e => setNewCall(prev => ({ ...prev, callbackDate: e.target.value }))}
+              className="px-2 py-0.5 bg-white border border-gray-300 rounded text-xs w-28
+                focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+            <input
+              type="time"
+              value={newCall.callbackTime}
+              onChange={e => setNewCall(prev => ({ ...prev, callbackTime: e.target.value }))}
+              className="px-2 py-0.5 bg-white border border-gray-300 rounded text-xs w-20
+                focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
 
-          {/* Save Button */}
+          {/* Save Button - Compact */}
           <button
             onClick={handleSaveCall}
             disabled={saving || !newCall.notes.trim()}
-            className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium text-sm
+            className="w-full py-2 bg-indigo-600 text-white rounded-lg font-medium text-sm
               hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed
-              shadow-sm transition-all duration-150 flex items-center justify-center gap-2
-              focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500"
+              transition-all flex items-center justify-center gap-2"
           >
             {saving ? (
               <>
@@ -728,12 +718,17 @@ const ActivityTab: React.FC<{
           <ActivitySkeleton />
         ) : calls.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center mb-4">
-              <Activity className="w-8 h-8 text-gray-400" />
+            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-100 to-blue-100 flex items-center justify-center mb-4">
+              <Activity className="w-8 h-8 text-indigo-500" />
             </div>
-            <p className="text-sm text-gray-500 max-w-[280px]">
-              No activity recorded yet. Use the form above to log your first interaction.
+            <h4 className="text-sm font-semibold text-gray-900 mb-1">No Activity Yet</h4>
+            <p className="text-xs text-gray-500 max-w-[280px] mb-4">
+              Start tracking customer interactions by logging your first call, email, or conversation using the form above.
             </p>
+            <div className="flex items-center gap-2 text-xs text-indigo-600">
+              <ArrowUp className="w-4 h-4 animate-bounce" />
+              <span className="font-medium">Use the form above to get started</span>
+            </div>
           </div>
         ) : (
           <div className="p-5 space-y-3">
@@ -1063,8 +1058,6 @@ const ContactsTab: React.FC<{
 const StatsTab: React.FC<{ accountNumber: number }> = ({ accountNumber }) => {
   const [accountHealth, setAccountHealth] = useState<AccountHealth | null>(null);
   const [dailySales, setDailySales] = useState<DailySales[]>([]);
-  const [predictions, setPredictions] = useState<ReorderPrediction[]>([]);
-  const [opportunities, setOpportunities] = useState<CrossSellOpportunity[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -1098,39 +1091,6 @@ const StatsTab: React.FC<{ accountNumber: number }> = ({ accountNumber }) => {
           console.error('Error loading sales:', salesError);
         } else {
           setDailySales(salesData || []);
-        }
-
-        // Load reorder predictions (in upcoming window, high confidence)
-        const { data: predData, error: predError } = await supabase
-          .from('predictions_account_part')
-          .select('*')
-          .eq('account_number', accountNumber)
-          .eq('in_upcoming_window', true)
-          .gte('confidence_score', 3)
-          .order('confidence_score', { ascending: false })
-          .order('days_until_predicted', { ascending: true })
-          .limit(10);
-
-        if (predError) {
-          console.error('Error loading predictions:', predError);
-        } else {
-          setPredictions(predData || []);
-        }
-
-        // Load cross-sell opportunities (score >= 3)
-        const { data: oppData, error: oppError } = await supabase
-          .from('opportunities_account_crosssell')
-          .select('*')
-          .eq('account_number', accountNumber)
-          .gte('opportunity_score', 3)
-          .order('opportunity_score', { ascending: false })
-          .order('estimated_opportunity_dollars', { ascending: false })
-          .limit(10);
-
-        if (oppError) {
-          console.error('Error loading opportunities:', oppError);
-        } else {
-          setOpportunities(oppData || []);
         }
       } catch (err) {
         console.error('Error loading analytics:', err);
@@ -1172,19 +1132,6 @@ const StatsTab: React.FC<{ accountNumber: number }> = ({ accountNumber }) => {
     return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
   };
 
-  const getConfidenceBadge = (score: number): string => {
-    if (score === 5) return 'bg-emerald-600 text-white';
-    if (score === 4) return 'bg-blue-600 text-white';
-    if (score === 3) return 'bg-amber-600 text-white';
-    return 'bg-gray-600 text-white';
-  };
-
-  const getOpportunityBadge = (score: number): string => {
-    if (score === 5) return 'bg-purple-600 text-white';
-    if (score === 4) return 'bg-indigo-600 text-white';
-    return 'bg-blue-600 text-white';
-  };
-
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -1220,104 +1167,103 @@ const StatsTab: React.FC<{ accountNumber: number }> = ({ accountNumber }) => {
 
   return (
     <div className="h-full overflow-y-auto bg-gray-50">
-      <div className="p-6 space-y-6">
-        {/* Health Score Banner */}
-        <div className={`p-6 rounded-2xl ${getHealthScoreColor(accountHealth.health_score)} border border-current border-opacity-20`}>
+      <div className="p-3 space-y-3">
+        {/* Health Score Banner - Compact */}
+        <div className={`p-3 rounded-xl ${getHealthScoreColor(accountHealth.health_score)} border border-current border-opacity-20`}>
           <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-xs font-semibold uppercase tracking-wider opacity-75">Account Health</span>
-                <span className={`px-3 py-1 rounded-full text-sm font-bold ${getHealthScoreBadge(accountHealth.health_score)} text-white`}>
-                  {accountHealth.health_score >= 0 ? '+' : ''}{accountHealth.health_score}
-                </span>
+            <div className="flex items-center gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider opacity-75">Health</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getHealthScoreBadge(accountHealth.health_score)} text-white`}>
+                    {accountHealth.health_score >= 0 ? '+' : ''}{accountHealth.health_score}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold capitalize">{accountHealth.health_status.replace('_', ' ')}</h3>
               </div>
-              <h3 className="text-2xl font-bold capitalize">{accountHealth.health_status.replace('_', ' ')}</h3>
-              <p className="text-sm mt-1 opacity-75">
-                {accountHealth.days_since_last_order} days since last order
-              </p>
+              <span className="text-xs opacity-75">{accountHealth.days_since_last_order}d since last order</span>
             </div>
-            <Activity className="w-16 h-16 opacity-20" />
+            <Activity className="w-10 h-10 opacity-20" />
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-4 gap-4">
+        {/* KPI Cards - Compact */}
+        <div className="grid grid-cols-4 gap-2">
           {/* Current 90 Days Sales */}
-          <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-indigo-600" />
+          <div className="bg-white rounded-lg p-2.5 border border-gray-200">
+            <div className="flex items-center justify-between mb-1">
+              <div className="w-7 h-7 rounded bg-indigo-100 flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-indigo-600" />
               </div>
               {getTrendIcon(accountHealth.sales_pct_change_vs_prior)}
             </div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Last 90 Days</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Last 90 Days</p>
+            <p className="text-lg font-bold text-gray-900">
               {formatCurrency(accountHealth.sales_dollars_current_90)}
             </p>
-            <p className={`text-xs mt-1 font-medium ${accountHealth.sales_pct_change_vs_prior >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+            <p className={`text-[10px] font-medium ${accountHealth.sales_pct_change_vs_prior >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {formatPercent(accountHealth.sales_pct_change_vs_prior)} vs prior
             </p>
           </div>
 
           {/* Order Count */}
-          <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                <ShoppingCart className="w-5 h-5 text-emerald-600" />
+          <div className="bg-white rounded-lg p-2.5 border border-gray-200">
+            <div className="flex items-center justify-between mb-1">
+              <div className="w-7 h-7 rounded bg-emerald-100 flex items-center justify-center">
+                <ShoppingCart className="w-4 h-4 text-emerald-600" />
               </div>
               {getTrendIcon(accountHealth.order_freq_pct_change)}
             </div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Orders (90d)</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Orders (90d)</p>
+            <p className="text-lg font-bold text-gray-900">
               {accountHealth.order_count_current_90}
             </p>
-            <p className={`text-xs mt-1 font-medium ${accountHealth.order_freq_pct_change >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+            <p className={`text-[10px] font-medium ${accountHealth.order_freq_pct_change >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {formatPercent(accountHealth.order_freq_pct_change)} frequency
             </p>
           </div>
 
           {/* Average Order Value */}
-          <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Target className="w-5 h-5 text-blue-600" />
+          <div className="bg-white rounded-lg p-2.5 border border-gray-200">
+            <div className="flex items-center justify-between mb-1">
+              <div className="w-7 h-7 rounded bg-blue-100 flex items-center justify-center">
+                <Target className="w-4 h-4 text-blue-600" />
               </div>
               {getTrendIcon(accountHealth.avg_order_value_pct_change)}
             </div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Avg Order Value</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Avg Order</p>
+            <p className="text-lg font-bold text-gray-900">
               {formatCurrency(accountHealth.avg_order_value_current_90)}
             </p>
-            <p className={`text-xs mt-1 font-medium ${accountHealth.avg_order_value_pct_change >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+            <p className={`text-[10px] font-medium ${accountHealth.avg_order_value_pct_change >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {formatPercent(accountHealth.avg_order_value_pct_change)} vs prior
             </p>
           </div>
 
           {/* Lifetime Value */}
-          <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                <Star className="w-5 h-5 text-purple-600" />
+          <div className="bg-white rounded-lg p-2.5 border border-gray-200">
+            <div className="flex items-center justify-between mb-1">
+              <div className="w-7 h-7 rounded bg-purple-100 flex items-center justify-center">
+                <Star className="w-4 h-4 text-purple-600" />
               </div>
             </div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Lifetime Value</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">
+            <p className="text-[10px] text-gray-500 uppercase tracking-wide font-medium">Lifetime</p>
+            <p className="text-lg font-bold text-gray-900">
               {formatCurrency(accountHealth.lifetime_sales_dollars)}
             </p>
-            <p className="text-xs mt-1 text-gray-500 font-medium">
-              {accountHealth.lifetime_order_count} orders total
+            <p className="text-[10px] text-gray-500 font-medium">
+              {accountHealth.lifetime_order_count} orders
             </p>
           </div>
         </div>
 
-        {/* Sales Trend Chart */}
+        {/* Sales Trend Chart - Compact */}
         {dailySales.length > 0 && (
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Sales Trend (12 Months)</h3>
-              <p className="text-sm text-gray-500">Daily sales activity over the past year</p>
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
+            <div className="mb-2">
+              <h3 className="text-sm font-semibold text-gray-900">Sales Trend (12 Months)</h3>
             </div>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={160}>
               <AreaChart data={dailySales}>
                 <defs>
                   <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
@@ -1328,17 +1274,18 @@ const StatsTab: React.FC<{ accountNumber: number }> = ({ accountNumber }) => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="invoice_date"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  tick={{ fontSize: 10 }}
+                  tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short' })}
                 />
                 <YAxis
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 10 }}
                   tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                  width={40}
                 />
                 <Tooltip
                   formatter={(value: number) => formatCurrency(value)}
                   labelFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                  contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                  contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '12px' }}
                 />
                 <Area
                   type="monotone"
@@ -1353,191 +1300,629 @@ const StatsTab: React.FC<{ accountNumber: number }> = ({ accountNumber }) => {
           </div>
         )}
 
-        {/* Period Comparison */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl p-4 border border-gray-200">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">Current 90 Days</h4>
-            <div className="space-y-2">
+        {/* Period Comparison - Compact Horizontal */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-white rounded-lg p-2.5 border border-gray-200">
+            <h4 className="text-xs font-semibold text-gray-700 mb-2">Current 90d</h4>
+            <div className="space-y-1">
               <div className="flex justify-between">
-                <span className="text-xs text-gray-500">Sales</span>
-                <span className="text-sm font-bold text-gray-900">{formatCurrency(accountHealth.sales_dollars_current_90)}</span>
+                <span className="text-[10px] text-gray-500">Sales</span>
+                <span className="text-xs font-bold text-gray-900">{formatCurrency(accountHealth.sales_dollars_current_90)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-xs text-gray-500">Orders</span>
-                <span className="text-sm font-bold text-gray-900">{accountHealth.order_count_current_90}</span>
+                <span className="text-[10px] text-gray-500">Orders</span>
+                <span className="text-xs font-bold text-gray-900">{accountHealth.order_count_current_90}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-xs text-gray-500">Products</span>
-                <span className="text-sm font-bold text-gray-900">{accountHealth.distinct_products_current_90}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-4 border border-gray-200">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">Prior 90 Days</h4>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-xs text-gray-500">Sales</span>
-                <span className="text-sm font-bold text-gray-900">{formatCurrency(accountHealth.sales_dollars_prior_90)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-xs text-gray-500">Orders</span>
-                <span className="text-sm font-bold text-gray-900">{accountHealth.order_count_prior_90}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-xs text-gray-500">Products</span>
-                <span className="text-sm font-bold text-gray-900">{accountHealth.distinct_products_prior_90}</span>
+                <span className="text-[10px] text-gray-500">Products</span>
+                <span className="text-xs font-bold text-gray-900">{accountHealth.distinct_products_current_90}</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border border-gray-200">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">Same Period Last Year</h4>
-            <div className="space-y-2">
+          <div className="bg-white rounded-lg p-2.5 border border-gray-200">
+            <h4 className="text-xs font-semibold text-gray-700 mb-2">Prior 90d</h4>
+            <div className="space-y-1">
               <div className="flex justify-between">
-                <span className="text-xs text-gray-500">Sales</span>
-                <span className="text-sm font-bold text-gray-900">{formatCurrency(accountHealth.sales_dollars_yoy_90)}</span>
+                <span className="text-[10px] text-gray-500">Sales</span>
+                <span className="text-xs font-bold text-gray-900">{formatCurrency(accountHealth.sales_dollars_prior_90)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-xs text-gray-500">Orders</span>
-                <span className="text-sm font-bold text-gray-900">{accountHealth.order_count_yoy_90}</span>
+                <span className="text-[10px] text-gray-500">Orders</span>
+                <span className="text-xs font-bold text-gray-900">{accountHealth.order_count_prior_90}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-xs text-gray-500">YoY Change</span>
-                <span className={`text-sm font-bold ${accountHealth.sales_pct_change_vs_yoy >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                <span className="text-[10px] text-gray-500">Products</span>
+                <span className="text-xs font-bold text-gray-900">{accountHealth.distinct_products_prior_90}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg p-2.5 border border-gray-200">
+            <h4 className="text-xs font-semibold text-gray-700 mb-2">YoY (90d)</h4>
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span className="text-[10px] text-gray-500">Sales</span>
+                <span className="text-xs font-bold text-gray-900">{formatCurrency(accountHealth.sales_dollars_yoy_90)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[10px] text-gray-500">Orders</span>
+                <span className="text-xs font-bold text-gray-900">{accountHealth.order_count_yoy_90}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[10px] text-gray-500">YoY Δ</span>
+                <span className={`text-xs font-bold ${accountHealth.sales_pct_change_vs_yoy >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {formatPercent(accountHealth.sales_pct_change_vs_yoy)}
                 </span>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
 
-        {/* Reorder Predictions */}
-        {predictions.length > 0 && (
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Target className="w-5 h-5 text-indigo-600" />
-                Upcoming Reorder Predictions
-              </h3>
-              <p className="text-sm text-gray-500">Products likely to be reordered soon</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Product</th>
-                    <th className="text-left py-3 px-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Category</th>
-                    <th className="text-center py-3 px-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Reorder Pattern</th>
-                    <th className="text-center py-3 px-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Days Until</th>
-                    <th className="text-center py-3 px-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Confidence</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {predictions.map((pred, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-2">
-                        <span className="text-sm font-medium text-gray-900 font-mono">{pred.part_number}</span>
-                      </td>
-                      <td className="py-3 px-2">
-                        <div className="text-sm text-gray-700">{pred.main_group}</div>
-                        <div className="text-xs text-gray-500">{pred.sub_group}</div>
-                      </td>
-                      <td className="py-3 px-2 text-center">
-                        <span className="text-sm text-gray-600">Every {Math.round(pred.avg_interval_days)} days</span>
-                      </td>
-                      <td className="py-3 px-2 text-center">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                          pred.days_until_predicted < 0
-                            ? 'bg-red-100 text-red-700'
-                            : pred.days_until_predicted <= 3
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-blue-100 text-blue-700'
-                        }`}>
-                          {pred.days_until_predicted < 0 ? `${Math.abs(pred.days_until_predicted)}d overdue` : `${pred.days_until_predicted}d`}
-                        </span>
-                      </td>
-                      <td className="py-3 px-2 text-center">
-                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold ${getConfidenceBadge(pred.confidence_score)}`}>
-                          {pred.confidence_score}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+// ============================================
+// PREDICTIONS TAB COMPONENT
+// ============================================
+const PredictionsTab: React.FC<{ accountNumber: number }> = ({ accountNumber }) => {
+  const [predictions, setPredictions] = useState<ReorderPrediction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadPredictions = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('predictions_account_part')
+          .select('*')
+          .eq('account_number', accountNumber)
+          .eq('in_upcoming_window', true)
+          .gte('confidence_score', 3)
+          .order('confidence_score', { ascending: false })
+          .order('days_until_predicted', { ascending: true })
+          .limit(20);
+
+        if (error) throw error;
+        setPredictions(data || []);
+      } catch (err) {
+        console.error('Error loading predictions:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPredictions();
+  }, [accountNumber]);
+
+  const getConfidenceBadge = (score: number): string => {
+    if (score === 5) return 'bg-emerald-600 text-white';
+    if (score === 4) return 'bg-blue-600 text-white';
+    if (score === 3) return 'bg-amber-600 text-white';
+    return 'bg-gray-600 text-white';
+  };
+
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  if (predictions.length === 0) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-center p-8">
+        <div className="w-16 h-16 rounded-2xl bg-indigo-100 flex items-center justify-center mb-4">
+          <Target className="w-8 h-8 text-indigo-500" />
+        </div>
+        <h3 className="text-base font-semibold text-gray-900 mb-2">No Predictions Yet</h3>
+        <p className="text-sm text-gray-500 max-w-[280px]">
+          Once this account has more order history, we'll predict when they're likely to reorder products.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full overflow-y-auto bg-gray-50 p-4">
+      <div className="bg-white rounded-xl border border-gray-200">
+        <div className="p-4 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <Target className="w-4 h-4 text-indigo-600" />
+            Upcoming Reorder Predictions
+          </h3>
+          <p className="text-xs text-gray-500 mt-0.5">Products likely to be reordered soon</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-600">Product</th>
+                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-600">Category</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-gray-600">Pattern</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-gray-600">Days</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-gray-600">Score</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {predictions.map((pred, idx) => (
+                <tr key={idx} className="hover:bg-gray-50">
+                  <td className="py-2 px-3">
+                    <span className="text-xs font-medium text-gray-900 font-mono">{pred.part_number}</span>
+                  </td>
+                  <td className="py-2 px-3">
+                    <div className="text-xs text-gray-700">{pred.main_group}</div>
+                    <div className="text-[10px] text-gray-500">{pred.sub_group}</div>
+                  </td>
+                  <td className="py-2 px-3 text-center">
+                    <span className="text-xs text-gray-600">~{Math.round(pred.avg_interval_days)}d</span>
+                  </td>
+                  <td className="py-2 px-3 text-center">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      pred.days_until_predicted < 0
+                        ? 'bg-red-100 text-red-700'
+                        : pred.days_until_predicted <= 5
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {pred.days_until_predicted < 0 ? `${Math.abs(pred.days_until_predicted)}d overdue` : `${pred.days_until_predicted}d`}
+                    </span>
+                  </td>
+                  <td className="py-2 px-3 text-center">
+                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getConfidenceBadge(pred.confidence_score)}`}>
+                      {pred.confidence_score}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// CROSS-SELL TAB COMPONENT
+// ============================================
+const CrossSellTab: React.FC<{ accountNumber: number }> = ({ accountNumber }) => {
+  const [opportunities, setOpportunities] = useState<CrossSellOpportunity[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadOpportunities = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('opportunities_account_crosssell')
+          .select('*')
+          .eq('account_number', accountNumber)
+          .gte('opportunity_score', 3)
+          .order('opportunity_score', { ascending: false })
+          .order('estimated_opportunity_dollars', { ascending: false })
+          .limit(20);
+
+        if (error) throw error;
+        setOpportunities(data || []);
+      } catch (err) {
+        console.error('Error loading opportunities:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOpportunities();
+  }, [accountNumber]);
+
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(value);
+  };
+
+  const getOpportunityBadge = (score: number): string => {
+    if (score === 5) return 'bg-purple-600 text-white';
+    if (score === 4) return 'bg-indigo-600 text-white';
+    return 'bg-blue-600 text-white';
+  };
+
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      </div>
+    );
+  }
+
+  if (opportunities.length === 0) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-center p-8">
+        <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center mb-4">
+          <Sparkles className="w-8 h-8 text-purple-500" />
+        </div>
+        <h3 className="text-base font-semibold text-gray-900 mb-2">No Cross-Sell Opportunities</h3>
+        <p className="text-sm text-gray-500 max-w-[280px]">
+          We'll identify products that similar accounts purchase to help grow this account's basket.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full overflow-y-auto bg-gray-50 p-4">
+      <div className="bg-white rounded-xl border border-gray-200">
+        <div className="p-4 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-purple-600" />
+            Cross-Sell Opportunities
+          </h3>
+          <p className="text-xs text-gray-500 mt-0.5">Products that similar accounts purchase</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="text-left py-2 px-3 text-xs font-semibold text-gray-600">Category</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-gray-600">Peers</th>
+                <th className="text-right py-2 px-3 text-xs font-semibold text-gray-600">Potential</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-gray-600">Score</th>
+                <th className="text-center py-2 px-3 text-xs font-semibold text-gray-600">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {opportunities.map((opp) => (
+                <tr key={opp.id} className="hover:bg-gray-50">
+                  <td className="py-2 px-3">
+                    <div className="text-xs font-medium text-gray-900">{opp.recommended_main_group}</div>
+                    <div className="text-[10px] text-gray-500">{opp.recommended_sub_group}</div>
+                  </td>
+                  <td className="py-2 px-3 text-center">
+                    <span className="text-xs font-semibold text-indigo-600">{opp.pct_of_peers_purchasing.toFixed(0)}%</span>
+                  </td>
+                  <td className="py-2 px-3 text-right">
+                    <span className="text-xs font-bold text-gray-900">{formatCurrency(opp.estimated_opportunity_dollars)}</span>
+                  </td>
+                  <td className="py-2 px-3 text-center">
+                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${getOpportunityBadge(opp.opportunity_score)}`}>
+                      {opp.opportunity_score}
+                    </span>
+                  </td>
+                  <td className="py-2 px-3 text-center">
+                    {opp.account_has_purchased_before ? (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700">
+                        Lapsed {opp.months_since_last_purchase}mo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
+                        New
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// CATEGORY SALES TAB COMPONENT
+// ============================================
+interface CategorySalesData {
+  name: string;
+  sales: number;
+  orders: number;
+  items: number;
+}
+
+const CATEGORY_COLORS = [
+  '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
+  '#f43f5e', '#ef4444', '#f97316', '#f59e0b', '#eab308'
+];
+
+const CategorySalesTab: React.FC<{ account: Account }> = ({ account }) => {
+  const [loading, setLoading] = useState(true);
+  const [mainGroupData, setMainGroupData] = useState<CategorySalesData[]>([]);
+  const [subGroupData, setSubGroupData] = useState<CategorySalesData[]>([]);
+  const [selectedMainGroup, setSelectedMainGroup] = useState<string | null>(null);
+  const [drillLevel, setDrillLevel] = useState<'main' | 'sub'>('main');
+  const [monthlyData, setMonthlyData] = useState<{ month: string; [key: string]: number | string }[]>([]);
+
+  useEffect(() => {
+    const loadCategorySales = async () => {
+      setLoading(true);
+      try {
+        // Get order history for last 12 months
+        const twelveMonthsAgo = new Date();
+        twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
+
+        const { data, error } = await supabase
+          .from('order_history_lcmd')
+          .select('main_group, sub_group, sales_dollars, qty_ordered, invoice_date')
+          .eq('account_number', account.account_number)
+          .gte('invoice_date', twelveMonthsAgo.toISOString().split('T')[0]);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          // Aggregate by main_group
+          const mainGroupMap = new Map<string, { sales: number; orders: Set<string>; items: number }>();
+          const monthlyMap = new Map<string, Map<string, number>>();
+
+          data.forEach((row: { main_group: string; sub_group: string; sales_dollars: number; qty_ordered: number; invoice_date: string }) => {
+            const mainGroup = row.main_group || 'Uncategorized';
+            const month = row.invoice_date.substring(0, 7); // YYYY-MM
+
+            // Main group aggregation
+            if (!mainGroupMap.has(mainGroup)) {
+              mainGroupMap.set(mainGroup, { sales: 0, orders: new Set(), items: 0 });
+            }
+            const mg = mainGroupMap.get(mainGroup)!;
+            mg.sales += row.sales_dollars || 0;
+            mg.orders.add(row.invoice_date);
+            mg.items += row.qty_ordered || 0;
+
+            // Monthly trend aggregation
+            if (!monthlyMap.has(month)) {
+              monthlyMap.set(month, new Map());
+            }
+            const monthData = monthlyMap.get(month)!;
+            monthData.set(mainGroup, (monthData.get(mainGroup) || 0) + (row.sales_dollars || 0));
+          });
+
+          // Convert to array and sort by sales
+          const mainGroupArray: CategorySalesData[] = Array.from(mainGroupMap.entries())
+            .map(([name, data]) => ({
+              name,
+              sales: data.sales,
+              orders: data.orders.size,
+              items: data.items
+            }))
+            .sort((a, b) => b.sales - a.sales)
+            .slice(0, 10); // Top 10
+
+          setMainGroupData(mainGroupArray);
+
+          // Build monthly trend data
+          const topGroups = mainGroupArray.slice(0, 5).map(g => g.name);
+          const sortedMonths = Array.from(monthlyMap.keys()).sort();
+          const monthlyArray = sortedMonths.map(month => {
+            const entry: { month: string; [key: string]: number | string } = {
+              month: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+            };
+            topGroups.forEach(group => {
+              entry[group] = monthlyMap.get(month)?.get(group) || 0;
+            });
+            return entry;
+          });
+          setMonthlyData(monthlyArray);
+        }
+      } catch (err) {
+        console.error('Error loading category sales:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCategorySales();
+  }, [account.account_number]);
+
+  // Load sub-group data when a main group is selected
+  useEffect(() => {
+    if (!selectedMainGroup) return;
+
+    const loadSubGroupData = async () => {
+      try {
+        const twelveMonthsAgo = new Date();
+        twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
+
+        const { data, error } = await supabase
+          .from('order_history_lcmd')
+          .select('sub_group, sales_dollars, qty_ordered, invoice_date')
+          .eq('account_number', account.account_number)
+          .eq('main_group', selectedMainGroup)
+          .gte('invoice_date', twelveMonthsAgo.toISOString().split('T')[0]);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          const subGroupMap = new Map<string, { sales: number; orders: Set<string>; items: number }>();
+
+          data.forEach((row: { sub_group: string; sales_dollars: number; qty_ordered: number; invoice_date: string }) => {
+            const subGroup = row.sub_group || 'Other';
+            if (!subGroupMap.has(subGroup)) {
+              subGroupMap.set(subGroup, { sales: 0, orders: new Set(), items: 0 });
+            }
+            const sg = subGroupMap.get(subGroup)!;
+            sg.sales += row.sales_dollars || 0;
+            sg.orders.add(row.invoice_date);
+            sg.items += row.qty_ordered || 0;
+          });
+
+          const subGroupArray: CategorySalesData[] = Array.from(subGroupMap.entries())
+            .map(([name, data]) => ({
+              name,
+              sales: data.sales,
+              orders: data.orders.size,
+              items: data.items
+            }))
+            .sort((a, b) => b.sales - a.sales);
+
+          setSubGroupData(subGroupArray);
+        }
+      } catch (err) {
+        console.error('Error loading sub-group data:', err);
+      }
+    };
+
+    loadSubGroupData();
+  }, [selectedMainGroup, account.account_number]);
+
+  const handleBarClick = (data: CategorySalesData) => {
+    setSelectedMainGroup(data.name);
+    setDrillLevel('sub');
+  };
+
+  const handleBackClick = () => {
+    setSelectedMainGroup(null);
+    setDrillLevel('main');
+    setSubGroupData([]);
+  };
+
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(value);
+  };
+
+  const currentData = drillLevel === 'main' ? mainGroupData : subGroupData;
+  const topGroups = mainGroupData.slice(0, 5).map(g => g.name);
+
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  if (mainGroupData.length === 0) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-center p-8">
+        <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+          <BarChart3 className="w-8 h-8 text-gray-400" />
+        </div>
+        <h3 className="text-base font-semibold text-gray-900 mb-2">No Category Data</h3>
+        <p className="text-sm text-gray-500 max-w-[280px]">
+          Once this account has order history, you'll see sales breakdown by category.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full overflow-y-auto bg-gray-50 p-3">
+      <div className="space-y-3">
+        {/* Breadcrumb */}
+        {drillLevel === 'sub' && (
+          <div className="flex items-center gap-2 text-sm">
+            <button
+              onClick={handleBackClick}
+              className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              All Categories
+            </button>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <span className="font-semibold text-gray-900">{selectedMainGroup}</span>
           </div>
         )}
 
-        {/* Cross-Sell Opportunities */}
-        {opportunities.length > 0 && (
-          <div className="bg-white rounded-xl p-6 border border-gray-200">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-600" />
-                Cross-Sell Opportunities
-              </h3>
-              <p className="text-sm text-gray-500">Products that similar accounts purchase</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Category</th>
-                    <th className="text-center py-3 px-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Peer Adoption</th>
-                    <th className="text-right py-3 px-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Potential Revenue</th>
-                    <th className="text-center py-3 px-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Score</th>
-                    <th className="text-center py-3 px-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {opportunities.map((opp) => (
-                    <tr key={opp.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-2">
-                        <div className="text-sm font-medium text-gray-900">{opp.recommended_main_group}</div>
-                        <div className="text-xs text-gray-500">{opp.recommended_sub_group}</div>
-                      </td>
-                      <td className="py-3 px-2 text-center">
-                        <span className="text-sm font-semibold text-indigo-600">{opp.pct_of_peers_purchasing.toFixed(0)}%</span>
-                        <div className="text-xs text-gray-500">of peers buy this</div>
-                      </td>
-                      <td className="py-3 px-2 text-right">
-                        <span className="text-sm font-bold text-gray-900">{formatCurrency(opp.estimated_opportunity_dollars)}</span>
-                      </td>
-                      <td className="py-3 px-2 text-center">
-                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold ${getOpportunityBadge(opp.opportunity_score)}`}>
-                          {opp.opportunity_score}
-                        </span>
-                      </td>
-                      <td className="py-3 px-2 text-center">
-                        {opp.account_has_purchased_before ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-amber-100 text-amber-700">
-                            <Clock className="w-3 h-3 mr-1" />
-                            Lapsed {opp.months_since_last_purchase}mo
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700">
-                            New Opportunity
-                          </span>
-                        )}
-                      </td>
-                    </tr>
+        {/* Chart 1: Category Revenue Bar Chart */}
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
+          <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-indigo-600" />
+            {drillLevel === 'main' ? 'Sales by Category' : `${selectedMainGroup} Sub-Categories`}
+            <span className="text-xs font-normal text-gray-500">(click bar to drill down)</span>
+          </h3>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={currentData} layout="vertical" margin={{ left: 80, right: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={75} />
+              <Tooltip
+                formatter={(value: number) => formatCurrency(value)}
+                contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '12px' }}
+              />
+              <Bar
+                dataKey="sales"
+                fill="#6366f1"
+                radius={[0, 4, 4, 0]}
+                cursor={drillLevel === 'main' ? 'pointer' : 'default'}
+                onClick={drillLevel === 'main' ? (data: CategorySalesData) => handleBarClick(data) : undefined}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Chart 2: Category Distribution Pie Chart */}
+        <div className="bg-white rounded-lg p-3 border border-gray-200">
+          <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <Target className="w-4 h-4 text-purple-600" />
+            {drillLevel === 'main' ? 'Category Distribution' : `${selectedMainGroup} Distribution`}
+          </h3>
+          <div className="flex items-center gap-4">
+            <ResponsiveContainer width="50%" height={150}>
+              <PieChart>
+                <Pie
+                  data={currentData.slice(0, 8)}
+                  dataKey="sales"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={60}
+                  innerRadius={30}
+                  onClick={drillLevel === 'main' ? (data: CategorySalesData) => handleBarClick(data) : undefined}
+                  cursor={drillLevel === 'main' ? 'pointer' : 'default'}
+                >
+                  {currentData.slice(0, 8).map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
                   ))}
-                </tbody>
-              </table>
+                </Pie>
+                <Tooltip formatter={(value: number) => formatCurrency(value)} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex-1 space-y-1">
+              {currentData.slice(0, 6).map((item, index) => (
+                <div
+                  key={item.name}
+                  className={`flex items-center gap-2 text-xs ${drillLevel === 'main' ? 'cursor-pointer hover:bg-gray-50 p-1 rounded' : ''}`}
+                  onClick={drillLevel === 'main' ? () => handleBarClick(item) : undefined}
+                >
+                  <div
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: CATEGORY_COLORS[index % CATEGORY_COLORS.length] }}
+                  />
+                  <span className="truncate flex-1 text-gray-700">{item.name}</span>
+                  <span className="font-semibold text-gray-900">{formatCurrency(item.sales)}</span>
+                </div>
+              ))}
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Empty States */}
-        {predictions.length === 0 && opportunities.length === 0 && (
-          <div className="bg-white rounded-xl p-8 border border-gray-200 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <Activity className="w-8 h-8 text-gray-400" />
-            </div>
-            <h4 className="text-sm font-semibold text-gray-700 mb-1">No Predictions or Opportunities</h4>
-            <p className="text-xs text-gray-500">More data needed to generate actionable insights</p>
+        {/* Chart 3: Monthly Trend Line Chart (only at main level) */}
+        {drillLevel === 'main' && monthlyData.length > 0 && (
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-600" />
+              Category Trends (12 Months)
+            </h3>
+            <ResponsiveContainer width="100%" height={150}>
+              <LineChart data={monthlyData} margin={{ left: 0, right: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} width={40} />
+                <Tooltip
+                  formatter={(value: number) => formatCurrency(value)}
+                  contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '11px' }}
+                />
+                <Legend wrapperStyle={{ fontSize: '10px' }} />
+                {topGroups.map((group, index) => (
+                  <Line
+                    key={group}
+                    type="monotone"
+                    dataKey={group}
+                    stroke={CATEGORY_COLORS[index]}
+                    strokeWidth={2}
+                    dot={false}
+                    name={group.length > 15 ? group.substring(0, 15) + '...' : group}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         )}
       </div>
@@ -1826,15 +2211,15 @@ const InlineEditableCard: React.FC<{
 
   return (
     <div
-      className={`flex items-start gap-3 p-3 rounded-xl transition-all duration-150 cursor-pointer group
+      className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-150 cursor-pointer group
         ${isEditing ? 'bg-indigo-50 ring-2 ring-indigo-500' : 'bg-gray-50/50 hover:bg-gray-100/80'}`}
       onClick={() => !isEditing && setIsEditing(true)}
     >
-      <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center flex-shrink-0`}>
-        {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-gray-500" /> : icon}
+      <div className={`w-7 h-7 rounded-md ${iconBg} flex items-center justify-center flex-shrink-0`}>
+        {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-500" /> : icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mb-0.5">{label}</p>
+        <p className="text-[9px] uppercase tracking-wider text-gray-400 font-medium">{label}</p>
         {isEditing ? (
           type === 'select' && options ? (
             <select
@@ -1842,7 +2227,7 @@ const InlineEditableCard: React.FC<{
               value={editValue}
               onChange={(e) => handleSelectChange(e.target.value)}
               onBlur={() => setIsEditing(false)}
-              className="w-full px-2 py-1 text-sm font-medium text-gray-900 bg-white border border-indigo-300 rounded-md
+              className="w-full px-1.5 py-0.5 text-xs font-medium text-gray-900 bg-white border border-indigo-300 rounded
                 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               {options.map(opt => (
@@ -1858,26 +2243,26 @@ const InlineEditableCard: React.FC<{
               onBlur={handleSave}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
-              className="w-full px-2 py-1 text-sm font-medium text-gray-900 bg-white border border-indigo-300 rounded-md
+              className="w-full px-1.5 py-0.5 text-xs font-medium text-gray-900 bg-white border border-indigo-300 rounded
                 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           )
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {href && value ? (
               <a
                 href={href}
                 onClick={(e) => e.stopPropagation()}
-                className="text-sm font-medium text-gray-900 hover:text-indigo-600 truncate"
+                className="text-xs font-medium text-gray-900 hover:text-indigo-600 truncate"
               >
                 {type === 'tel' ? formatPhone(value) : displayValue}
               </a>
             ) : (
-              <p className={`text-sm font-medium truncate ${value ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+              <p className={`text-xs font-medium truncate ${value ? 'text-gray-900' : 'text-gray-400 italic'}`}>
                 {type === 'tel' && value ? formatPhone(value) : displayValue}
               </p>
             )}
-            <Edit3 className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+            <Edit3 className="w-2.5 h-2.5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
           </div>
         )}
       </div>
@@ -1910,27 +2295,30 @@ const CustomerDetailView: React.FC<{
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: 'activity', label: 'Activity', icon: <PhoneCall className="w-4 h-4" /> },
     { id: 'contacts', label: 'Contacts', icon: <Users className="w-4 h-4" /> },
-    { id: 'stats', label: 'Stats', icon: <BarChart3 className="w-4 h-4" /> }
+    { id: 'stats', label: 'Stats', icon: <BarChart3 className="w-4 h-4" /> },
+    { id: 'predictions', label: 'Predictions', icon: <Target className="w-4 h-4" /> },
+    { id: 'crosssell', label: 'Cross-Sell', icon: <Sparkles className="w-4 h-4" /> },
+    { id: 'categorysales', label: 'Category Sales', icon: <Package className="w-4 h-4" /> }
   ];
 
   return (
     <div className="h-full flex flex-col bg-white overflow-hidden">
-      {/* Header */}
+      {/* Header - Compact */}
       <div className="flex-shrink-0 border-b border-gray-200">
-        <div className="px-6 py-5">
+        <div className="px-4 py-3">
           {/* Title Row */}
-          <div className="flex items-start gap-4">
+          <div className="flex items-center gap-3">
             {/* Account Number Badge */}
-            <div className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-lg font-bold shadow-sm tabular-nums">
+            <div className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-base font-bold tabular-nums">
               {localAccount.account_number}
             </div>
 
             {/* Info */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-semibold text-gray-900 truncate">{localAccount.acct_name}</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-gray-900 truncate">{localAccount.acct_name}</h2>
                 {localAccount.status && (
-                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                  <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
                     localAccount.status.toLowerCase() === 'active'
                       ? 'bg-emerald-100 text-emerald-700'
                       : 'bg-gray-100 text-gray-600'
@@ -1939,16 +2327,16 @@ const CustomerDetailView: React.FC<{
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-xs text-gray-500">
                 {localAccount.city && localAccount.state && `${localAccount.city}, ${localAccount.state}`}
                 {localAccount.salesman && <span> · Rep: {localAccount.salesman}</span>}
               </p>
             </div>
 
-            {/* Actions - Only Call and Email buttons */}
+            {/* Actions */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <QuickActionButton
-                icon={<Phone className="w-4 h-4" />}
+                icon={<Phone className="w-3.5 h-3.5" />}
                 label="Call"
                 onClick={() => localAccount.phone && window.open(`tel:${localAccount.phone}`)}
                 variant="primary"
@@ -1956,7 +2344,7 @@ const CustomerDetailView: React.FC<{
                 size="sm"
               />
               <QuickActionButton
-                icon={<Mail className="w-4 h-4" />}
+                icon={<Mail className="w-3.5 h-3.5" />}
                 label="Email"
                 onClick={() => localAccount.email_address && window.open(`mailto:${localAccount.email_address}`)}
                 disabled={!localAccount.email_address}
@@ -1966,52 +2354,72 @@ const CustomerDetailView: React.FC<{
           </div>
         </div>
 
-        {/* Inline Editable Info Cards - Click any field to edit */}
-        <div className="px-6 pb-4">
-          <p className="text-[10px] text-gray-400 mb-2 flex items-center gap-1">
+        {/* Inline Editable Info Cards - Compact */}
+        <div className="px-4 pb-3">
+          <p className="text-[10px] text-gray-400 mb-1.5 flex items-center gap-1">
             <Edit3 className="w-3 h-3" /> Click any field to edit
           </p>
-          {/* Row 1: Address, Main Phone, Mobile Phone */}
-          <div className="grid grid-cols-3 gap-3">
-            <InlineEditableCard
-              icon={<MapPin className="w-4 h-4 text-indigo-600" />}
-              iconBg="bg-indigo-100"
-              label="Address"
-              value={localAccount.address || ''}
-              field="address"
-              accountNumber={localAccount.account_number}
-              onUpdate={handleFieldUpdate}
-              placeholder="No address"
-            />
-            <InlineEditableCard
-              icon={<Phone className="w-4 h-4 text-emerald-600" />}
-              iconBg="bg-emerald-100"
-              label="Main Phone"
-              value={localAccount.phone || ''}
-              field="phone"
-              accountNumber={localAccount.account_number}
-              onUpdate={handleFieldUpdate}
-              type="tel"
-              href={localAccount.phone ? `tel:${localAccount.phone}` : undefined}
-              placeholder="No phone"
-            />
-            <InlineEditableCard
-              icon={<Phone className="w-4 h-4 text-teal-600" />}
-              iconBg="bg-teal-100"
-              label="Mobile Phone"
-              value={localAccount.mobile_phone || ''}
-              field="mobile_phone"
-              accountNumber={localAccount.account_number}
-              onUpdate={handleFieldUpdate}
-              type="tel"
-              href={localAccount.mobile_phone ? `tel:${localAccount.mobile_phone}` : undefined}
-              placeholder="No mobile"
-            />
+          {/* Row 1: Address (2 cols), Main Phone (1 col), Mobile Phone (1 col), Terms (1 col) */}
+          <div className="grid grid-cols-10 gap-2">
+            <div className="col-span-4">
+              <InlineEditableCard
+                icon={<MapPin className="w-3.5 h-3.5 text-indigo-600" />}
+                iconBg="bg-indigo-100"
+                label="Address"
+                value={localAccount.address || ''}
+                field="address"
+                accountNumber={localAccount.account_number}
+                onUpdate={handleFieldUpdate}
+                placeholder="No address"
+              />
+            </div>
+            <div className="col-span-2">
+              <InlineEditableCard
+                icon={<Phone className="w-3.5 h-3.5 text-emerald-600" />}
+                iconBg="bg-emerald-100"
+                label="Main Phone"
+                value={localAccount.phone || ''}
+                field="phone"
+                accountNumber={localAccount.account_number}
+                onUpdate={handleFieldUpdate}
+                type="tel"
+                href={localAccount.phone ? `tel:${localAccount.phone}` : undefined}
+                placeholder="No phone"
+              />
+            </div>
+            <div className="col-span-2">
+              <InlineEditableCard
+                icon={<Phone className="w-3.5 h-3.5 text-teal-600" />}
+                iconBg="bg-teal-100"
+                label="Mobile Phone"
+                value={localAccount.mobile_phone || ''}
+                field="mobile_phone"
+                accountNumber={localAccount.account_number}
+                onUpdate={handleFieldUpdate}
+                type="tel"
+                href={localAccount.mobile_phone ? `tel:${localAccount.mobile_phone}` : undefined}
+                placeholder="No mobile"
+              />
+            </div>
+            <div className="col-span-2">
+              <InlineEditableCard
+                icon={<Building2 className="w-3.5 h-3.5 text-amber-600" />}
+                iconBg="bg-amber-100"
+                label="Terms"
+                value={localAccount.terms || ''}
+                field="terms"
+                accountNumber={localAccount.account_number}
+                onUpdate={handleFieldUpdate}
+                type="select"
+                options={TERMS_OPTIONS}
+                placeholder="Not set"
+              />
+            </div>
           </div>
           {/* Row 2: Email, Contact, Website */}
-          <div className="grid grid-cols-3 gap-3 mt-3">
+          <div className="grid grid-cols-3 gap-2 mt-2">
             <InlineEditableCard
-              icon={<Mail className="w-4 h-4 text-blue-600" />}
+              icon={<Mail className="w-3.5 h-3.5 text-blue-600" />}
               iconBg="bg-blue-100"
               label="Email"
               value={localAccount.email_address || ''}
@@ -2023,7 +2431,7 @@ const CustomerDetailView: React.FC<{
               placeholder="No email"
             />
             <InlineEditableCard
-              icon={<User className="w-4 h-4 text-purple-600" />}
+              icon={<User className="w-3.5 h-3.5 text-purple-600" />}
               iconBg="bg-purple-100"
               label="Contact"
               value={localAccount.contact || ''}
@@ -2033,7 +2441,7 @@ const CustomerDetailView: React.FC<{
               placeholder="No contact"
             />
             <InlineEditableCard
-              icon={<Globe className="w-4 h-4 text-cyan-600" />}
+              icon={<Globe className="w-3.5 h-3.5 text-cyan-600" />}
               iconBg="bg-cyan-100"
               label="Website"
               value={localAccount.website || ''}
@@ -2044,32 +2452,17 @@ const CustomerDetailView: React.FC<{
               placeholder="No website"
             />
           </div>
-          {/* Row 3: Terms dropdown */}
-          <div className="grid grid-cols-3 gap-3 mt-3">
-            <InlineEditableCard
-              icon={<Building2 className="w-4 h-4 text-amber-600" />}
-              iconBg="bg-amber-100"
-              label="Terms"
-              value={localAccount.terms || ''}
-              field="terms"
-              accountNumber={localAccount.account_number}
-              onUpdate={handleFieldUpdate}
-              type="select"
-              options={TERMS_OPTIONS}
-              placeholder="Not set"
-            />
-          </div>
         </div>
 
-        {/* Tabs */}
-        <div className="px-6 border-t border-gray-100">
+        {/* Tabs - Compact */}
+        <div className="px-4 border-t border-gray-100">
           <nav className="flex gap-1 -mb-px" aria-label="Tabs">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`
-                  flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all duration-150
+                  flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all duration-150
                   focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500
                   ${activeTab === tab.id
                     ? 'border-indigo-600 text-indigo-600'
@@ -2100,6 +2493,15 @@ const CustomerDetailView: React.FC<{
         )}
         {activeTab === 'stats' && (
           <StatsTab accountNumber={account.account_number} />
+        )}
+        {activeTab === 'predictions' && (
+          <PredictionsTab accountNumber={account.account_number} />
+        )}
+        {activeTab === 'crosssell' && (
+          <CrossSellTab accountNumber={account.account_number} />
+        )}
+        {activeTab === 'categorysales' && (
+          <CategorySalesTab account={account} />
         )}
       </div>
     </div>
@@ -2148,6 +2550,7 @@ const CRMPage: React.FC = () => {
   const [hideOutOfBusiness, setHideOutOfBusiness] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
   const [accountHealthMap, setAccountHealthMap] = useState<Map<number, AccountHealthSummary>>(new Map());
+  const [imminentPredictionAccounts, setImminentPredictionAccounts] = useState<Set<number>>(new Set());
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Load accounts with salesman filter
@@ -2184,6 +2587,25 @@ const CRMPage: React.FC = () => {
           });
           setAccountHealthMap(healthMap);
         }
+
+        // Load imminent predictions (within ±15 days) for account number indicator
+        const { data: predData, error: predError } = await supabase
+          .from('predictions_account_part')
+          .select('account_number, days_until_predicted')
+          .eq('in_upcoming_window', true)
+          .gte('confidence_score', 3)
+          .gte('days_until_predicted', -15)
+          .lte('days_until_predicted', 15);
+
+        if (predError) {
+          console.error('Error loading predictions:', predError);
+        } else if (predData) {
+          const accountsWithPredictions = new Set<number>();
+          predData.forEach((p: { account_number: number }) => {
+            accountsWithPredictions.add(p.account_number);
+          });
+          setImminentPredictionAccounts(accountsWithPredictions);
+        }
       } catch (err) {
         console.error('Error loading accounts:', err);
       } finally {
@@ -2203,8 +2625,9 @@ const CRMPage: React.FC = () => {
       filtered = filtered.filter(a => {
         const statusLower = (a.status || '').toLowerCase();
         const zipLower = (a.zip || '').toUpperCase();
-        // Hide if status contains "out of business" or zip starts with XXXXX
+        // Hide if status contains "out of business", "dead", or zip starts with XXXXX
         if (statusLower.includes('out of business')) return false;
+        if (statusLower.includes('dead')) return false;
         if (zipLower.startsWith('XXXXX')) return false;
         return true;
       });
@@ -2453,7 +2876,7 @@ const CRMPage: React.FC = () => {
                   className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                 />
                 <span className="text-xs text-gray-600 group-hover:text-gray-900 transition-colors">
-                  Hide out of business
+                  Hide Out of Business or Dead
                 </span>
               </label>
 
@@ -2496,6 +2919,7 @@ const CRMPage: React.FC = () => {
                     isSelected={selectedAccount?.account_number === account.account_number}
                     onClick={() => setSelectedAccount(account)}
                     healthScore={accountHealthMap.get(account.account_number)?.health_score}
+                    hasImminentPrediction={imminentPredictionAccounts.has(account.account_number)}
                   />
                 ))}
               </div>

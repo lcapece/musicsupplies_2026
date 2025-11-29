@@ -403,6 +403,52 @@ img[alt*="logo"]::after {
   font-weight: 600;
 }
 
+/* Prediction star pulsating animation */
+@keyframes predictionStarPulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.5));
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.9));
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.5));
+  }
+}
+
+.prediction-star-pulse {
+  animation: predictionStarPulse 1.5s ease-in-out infinite;
+}
+
+/* Account number pulsating red animation for imminent predictions */
+@keyframes accountNumberPulse {
+  0% {
+    color: #dc2626;
+    background-color: #fef2f2;
+    box-shadow: 0 0 4px rgba(220, 38, 38, 0.3);
+  }
+  50% {
+    color: #991b1b;
+    background-color: #fee2e2;
+    box-shadow: 0 0 8px rgba(220, 38, 38, 0.6);
+  }
+  100% {
+    color: #dc2626;
+    background-color: #fef2f2;
+    box-shadow: 0 0 4px rgba(220, 38, 38, 0.3);
+  }
+}
+
+.account-number-pulse {
+  animation: accountNumberPulse 1.2s ease-in-out infinite;
+}
+
 /* (Removed responsive header typography; using fixed sizes again) */
 /* Responsive header typography (fits within 64px header) */
 .header-logo {
