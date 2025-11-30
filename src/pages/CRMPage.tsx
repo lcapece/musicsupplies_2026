@@ -942,6 +942,16 @@ const ContactsTab: React.FC<{
               className="col-span-2 px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm
                 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
+            <textarea
+              value={newContact.notes}
+              onChange={e => setNewContact(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="Notes / Comments (press Enter for new line)"
+              rows={3}
+              style={{ fontSize: '10pt', lineHeight: '1.4' }}
+              className="col-span-2 px-3 py-2 bg-white border border-gray-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                resize-none"
+            />
           </div>
           <button
             onClick={handleSaveContact}
@@ -1044,6 +1054,12 @@ const ContactsTab: React.FC<{
                   </div>
                 </div>
               </div>
+              {/* Notes section */}
+              {contact.notes && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-[10pt] text-gray-600 whitespace-pre-wrap leading-snug">{contact.notes}</p>
+                </div>
+              )}
             </div>
           ))
         )}
@@ -2728,6 +2744,23 @@ const CRMPage: React.FC = () => {
 
     setFilteredAccounts(filtered);
   }, [searchTerm, accounts, hideOutOfBusiness]);
+
+  // Full-page loading overlay for initial data load
+  if (loading) {
+    return (
+      <div className="min-h-screen h-screen flex flex-col items-center justify-center bg-gray-100">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-medium text-gray-700">Loading data, please wait...</p>
+            <p className="text-sm text-gray-500 mt-1">Fetching customer accounts</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen h-screen max-h-screen flex flex-col bg-gray-100 overflow-hidden">

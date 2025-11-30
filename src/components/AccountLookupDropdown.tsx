@@ -81,9 +81,10 @@ const AccountLookupDropdown: React.FC<AccountLookupDropdownProps> = ({
     };
   }, [searchQuery, accounts]);
 
-  // Intelligent multi-field search
+  // Intelligent multi-field search with exact match prioritization
   const performSearch = useCallback((query: string) => {
-    const searchTerms = query.toLowerCase().trim().split(/\s+/);
+    const queryLower = query.toLowerCase().trim();
+    const searchTerms = queryLower.split(/\s+/);
 
     const scored = accounts.map(account => {
       let score = 0;
@@ -100,50 +101,81 @@ const AccountLookupDropdown: React.FC<AccountLookupDropdownProps> = ({
       // Create combined search text
       const combinedText = `${searchFields.accountNum} ${searchFields.name} ${searchFields.phone} ${searchFields.address} ${searchFields.city} ${searchFields.state}`.toLowerCase();
 
+      // HIGHEST PRIORITY: Exact account number match (entire query = account number)
+      if (searchFields.accountNum === queryLower) {
+        score += 10000;
+      }
+
+      // SECOND HIGHEST: Exact business name match (entire query = business name)
+      if (searchFields.name === queryLower) {
+        score += 9000;
+      }
+
+      // Check for multi-word exact name match (all search terms together match the name exactly)
+      // e.g., "all music" should match "All Music" exactly
+      const queryNoSpaces = queryLower.replace(/\s+/g, ' ');
+      if (searchFields.name === queryNoSpaces) {
+        score += 9000;
+      }
+
       for (const term of searchTerms) {
-        // Exact account number match - highest priority
+        // Exact account number match for individual term - very high priority
         if (searchFields.accountNum === term) {
-          score += 1000;
-        } else if (searchFields.accountNum.startsWith(term)) {
+          score += 5000;
+        } else if (searchFields.accountNum.startsWith(term) && term.length >= 2) {
+          // Account starts with term (only if term is 2+ chars to avoid false positives)
           score += 500;
+        } else if (searchFields.accountNum.includes(term) && term.length >= 3) {
+          // Account contains term somewhere (lower priority - this catches 101 in 2101)
+          score += 50;
         }
 
         // Phone number match (digits only)
         const termDigits = term.replace(/\D/g, '');
         if (termDigits.length >= 3) {
           if (searchFields.phone === termDigits) {
-            score += 800;
+            score += 4000;
           } else if (searchFields.phone.includes(termDigits)) {
             score += 400;
           }
         }
 
-        // Business name match - very important
+        // Business name match - check if name equals term exactly
         if (searchFields.name === term) {
-          score += 600;
+          score += 3000;
+        } else if (searchFields.name.startsWith(term + ' ') || searchFields.name === term) {
+          // Name starts with this word followed by space (word boundary match)
+          score += 1500;
         } else if (searchFields.name.startsWith(term)) {
-          score += 300;
+          // Name starts with term
+          score += 800;
+        } else if (searchFields.name.includes(' ' + term + ' ') ||
+                   searchFields.name.includes(' ' + term) ||
+                   searchFields.name.endsWith(' ' + term)) {
+          // Term appears as a complete word in the name
+          score += 400;
         } else if (searchFields.name.includes(term)) {
-          score += 150;
+          // Term appears somewhere in name (partial match - lowest name priority)
+          score += 100;
         }
 
         // Address match
         if (searchFields.address.startsWith(term)) {
           score += 200;
         } else if (searchFields.address.includes(term)) {
-          score += 100;
+          score += 75;
         }
 
         // City match
         if (searchFields.city.startsWith(term)) {
           score += 150;
         } else if (searchFields.city.includes(term)) {
-          score += 75;
+          score += 50;
         }
 
-        // General match in combined text
+        // General match in combined text (lowest priority)
         if (combinedText.includes(term)) {
-          score += 25;
+          score += 10;
         }
       }
 
@@ -321,34 +353,32 @@ const AccountLookupDropdown: React.FC<AccountLookupDropdownProps> = ({
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      {/* Selected Account Display */}
+      {/* Selected Account Display - Compact single-line */}
       {selectedAccount && !isOpen ? (
         <div
-          className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-slate-50 to-white border-2 border-emerald-200 rounded-lg cursor-pointer hover:border-emerald-300 transition-all shadow-sm"
+          className="flex items-center gap-2 px-2 py-1 bg-white border border-gray-400 cursor-pointer hover:border-gray-500 transition-all"
           onClick={() => {
             setIsOpen(true);
             setSearchQuery('');
             inputRef.current?.focus();
           }}
         >
-          <div className="flex-shrink-0 w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-            <span className="text-emerald-700 font-bold text-sm">
+          <div className="flex-shrink-0 w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center">
+            <span className="text-emerald-700 font-bold text-[10px]">
               {selectedAccount.acct_name?.charAt(0).toUpperCase() || '#'}
             </span>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-800 truncate">
-                {selectedAccount.acct_name}
-              </span>
-              <span className="text-xs font-mono bg-slate-200 text-slate-600 px-2 py-0.5 rounded">
-                #{selectedAccount.account_number}
-              </span>
-            </div>
-            <div className="text-sm text-slate-500 truncate">
-              {selectedAccount.city}, {selectedAccount.state}
-              {selectedAccount.phone && ` • ${formatPhone(selectedAccount.phone)}`}
-            </div>
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            <span className="font-semibold text-xs text-slate-800 truncate">
+              {selectedAccount.acct_name}
+            </span>
+            <span className="text-[10px] font-mono bg-slate-200 text-slate-600 px-1 rounded">
+              #{selectedAccount.account_number}
+            </span>
+          </div>
+          <div className="text-[11px] text-slate-500 truncate hidden sm:block">
+            {selectedAccount.city}, {selectedAccount.state}
+            {selectedAccount.phone && ` • ${formatPhone(selectedAccount.phone)}`}
           </div>
           <button
             type="button"
@@ -356,25 +386,25 @@ const AccountLookupDropdown: React.FC<AccountLookupDropdownProps> = ({
               e.stopPropagation();
               handleClear();
             }}
-            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+            className="p-0.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
             title="Clear selection"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
       ) : (
-        /* Search Input */
+        /* Search Input - Compact */
         <div className="relative">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+          <div className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400">
             {isSearching || loading ? (
-              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
             ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             )}
@@ -389,12 +419,12 @@ const AccountLookupDropdown: React.FC<AccountLookupDropdownProps> = ({
             disabled={disabled}
             placeholder={placeholder}
             autoComplete="off"
-            className={`w-full pl-12 pr-4 py-3 text-base border-2 rounded-lg transition-all duration-200 ${
+            className={`w-full pl-7 pr-6 py-1 text-xs border transition-all duration-200 ${
               disabled
-                ? 'bg-slate-100 border-slate-200 cursor-not-allowed text-slate-400'
+                ? 'bg-slate-100 border-gray-300 cursor-not-allowed text-slate-400'
                 : isOpen
-                  ? 'bg-white border-blue-400 ring-4 ring-blue-50 shadow-lg'
-                  : 'bg-white border-slate-200 hover:border-slate-300 focus:border-blue-400 focus:ring-4 focus:ring-blue-50'
+                  ? 'bg-white border-blue-400 ring-2 ring-blue-100'
+                  : 'bg-white border-gray-400 hover:border-gray-500 focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
             }`}
           />
           {searchQuery && (
@@ -405,9 +435,9 @@ const AccountLookupDropdown: React.FC<AccountLookupDropdownProps> = ({
                 setFilteredAccounts([]);
                 inputRef.current?.focus();
               }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 rounded hover:bg-slate-100 transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>

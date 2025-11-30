@@ -262,12 +262,25 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   };
 
+  // Format phone number as (000)000-0000
+  const formatPhoneDisplay = (phone: string | undefined): string => {
+    if (!phone) return '';
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) {
+      return `(${digits.slice(0, 3)})${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    if (digits.length === 11 && digits.startsWith('1')) {
+      return `(${digits.slice(1, 4)})${digits.slice(4, 7)}-${digits.slice(7)}`;
+    }
+    return phone;
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      {/* Modal Container - Fixed size, no scroll */}
-      <div className="bg-white w-[1400px] h-[90vh] max-h-[900px] flex flex-col border border-black shadow-lg">
+    <div className="fixed inset-0 z-50 flex items-start justify-start">
+      {/* Modal Container - True full screen */}
+      <div className="bg-white w-screen h-screen flex flex-col">
 
         {/* Header Bar - Dense */}
         <div className="flex items-center justify-between px-3 py-1 bg-gray-100 border-b border-black">
@@ -394,63 +407,63 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
           )}
         </div>
 
-        {/* Row 2: Bill To & Ship To - Side by side */}
-        <div className="flex gap-3 px-3 py-2 border-b border-gray-300">
-          {/* Bill To */}
-          <div className="flex-1 border-2 border-black p-2">
-            <div className="text-xs font-bold underline mb-1">Bill To:</div>
+        {/* Row 2: Bill To & Ship To - Side by side, minimal height */}
+        <div className="flex gap-3 px-3 py-1 border-b border-gray-300">
+          {/* Bill To - with gridlines */}
+          <div className="flex-1 border-2 border-black p-1.5">
+            <div className="text-sm font-bold underline mb-0.5">Bill To:</div>
             {account ? (
-              <div className="text-[11px] leading-tight">
-                <div className="font-semibold">{account.acct_name}</div>
-                <div>{account.address}</div>
-                <div>{account.city}, {account.state} {account.zip}</div>
-                {account.contact && <div>Attn: {account.contact}</div>}
-                {account.phone && <div className="text-gray-600">{account.phone}</div>}
+              <div className="text-[13px] leading-snug">
+                <div className="font-semibold border-b border-gray-300 py-0.5">{account.acct_name}</div>
+                <div className="border-b border-gray-300 py-0.5">{account.address}</div>
+                <div className="border-b border-gray-300 py-0.5">{account.city}, {account.state} {account.zip}</div>
+                {account.contact && <div className="border-b border-gray-300 py-0.5">Attn: {account.contact}</div>}
+                {account.phone && <div className="text-gray-600 py-0.5">{formatPhoneDisplay(account.phone)}</div>}
               </div>
             ) : (
-              <div className="text-[11px] text-gray-400 italic">Select account</div>
+              <div className="text-[13px] text-gray-400 italic">Select account</div>
             )}
           </div>
 
-          {/* Ship To */}
-          <div className="flex-1 border-2 border-black p-2">
-            <div className="text-xs font-bold underline mb-1">Ship To:</div>
-            <div className="space-y-1">
+          {/* Ship To - with gridlines */}
+          <div className="flex-1 border-2 border-black p-1.5">
+            <div className="text-sm font-bold underline mb-0.5">Ship To:</div>
+            <div className="space-y-0">
               <input
                 type="text"
                 value={formData.st_name || ''}
                 onChange={(e) => handleInputChange('st_name', e.target.value)}
                 placeholder="Name"
-                className="w-full px-1 py-0.5 text-[11px] border border-gray-300"
+                className="w-full px-1 py-0.5 text-[13px] border border-gray-400"
               />
               <input
                 type="text"
                 value={formData.st_address || ''}
                 onChange={(e) => handleInputChange('st_address', e.target.value)}
                 placeholder="Address"
-                className="w-full px-1 py-0.5 text-[11px] border border-gray-300"
+                className="w-full px-1 py-0.5 text-[13px] border border-gray-400 border-t-0"
               />
-              <div className="flex gap-1">
+              <div className="flex">
                 <input
                   type="text"
                   value={formData.st_city || ''}
                   onChange={(e) => handleInputChange('st_city', e.target.value)}
                   placeholder="City"
-                  className="flex-1 px-1 py-0.5 text-[11px] border border-gray-300"
+                  className="flex-1 px-1 py-0.5 text-[13px] border border-gray-400 border-t-0"
                 />
                 <input
                   type="text"
                   value={formData.st_state || ''}
                   onChange={(e) => handleInputChange('st_state', e.target.value)}
                   placeholder="ST"
-                  className="w-10 px-1 py-0.5 text-[11px] border border-gray-300 text-center"
+                  className="w-12 px-1 py-0.5 text-[13px] border border-gray-400 border-t-0 border-l-0 text-center"
                 />
                 <input
                   type="text"
                   value={formData.st_zip || ''}
                   onChange={(e) => handleInputChange('st_zip', e.target.value)}
                   placeholder="ZIP"
-                  className="w-20 px-1 py-0.5 text-[11px] border border-gray-300"
+                  className="w-20 px-1 py-0.5 text-[13px] border border-gray-400 border-t-0 border-l-0"
                 />
               </div>
               <input
@@ -458,7 +471,7 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
                 value={formData.st_contact || ''}
                 onChange={(e) => handleInputChange('st_contact', e.target.value)}
                 placeholder="Attn / Contact"
-                className="w-full px-1 py-0.5 text-[11px] border border-gray-300"
+                className="w-full px-1 py-0.5 text-[13px] border border-gray-400 border-t-0"
               />
             </div>
           </div>
