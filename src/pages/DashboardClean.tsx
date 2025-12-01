@@ -72,14 +72,7 @@ const DashboardClean: React.FC = () => {
 
   // Check for past due invoices when user logs in (non-staff, non-demo, non-admin)
   useEffect(() => {
-    if (user?.accountNumber && !pastDueChecked && !isDemoMode && !isStaffUser) {
-      const accountNum = parseInt(user.accountNumber, 10);
-      // Skip admin accounts (like 999, 99)
-      if (!isNaN(accountNum) && accountNum > 100) {
-        setShowPastDueModal(true);
-        setPastDueChecked(true);
-      }
-    }
+    // DISABLED - payment matching bug
   }, [user?.accountNumber, pastDueChecked, isDemoMode, isStaffUser]);
 
   const handleDemoTimeout = () => {
