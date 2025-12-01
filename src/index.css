@@ -449,6 +449,26 @@ img[alt*="logo"]::after {
   animation: accountNumberPulse 1.2s ease-in-out infinite;
 }
 
+/* Phone icon urgent flash animation for 90+ days or no call data */
+@keyframes phoneFlashUrgent {
+  0% {
+    background-color: #dc2626; /* red-600 */
+    box-shadow: 0 0 0 rgba(220, 38, 38, 0);
+  }
+  50% {
+    background-color: #ef4444; /* red-500 - brighter */
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+  }
+  100% {
+    background-color: #dc2626; /* red-600 */
+    box-shadow: 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+.phone-flash-urgent {
+  animation: phoneFlashUrgent 0.8s ease-in-out infinite;
+}
+
 /* (Removed responsive header typography; using fixed sizes again) */
 /* Responsive header typography (fits within 64px header) */
 .header-logo {

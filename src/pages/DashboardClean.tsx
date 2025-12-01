@@ -26,10 +26,11 @@ import { logSearchActivity, getSessionId, buildSearchQuery } from '../utils/perf
 import DemoModeBanner from '../components/DemoModeBanner';
 import { useNavigate } from 'react-router-dom';
 import { useAutoVersionCheck } from '../hooks/useAutoVersionCheck';
+import PastDueInvoicesModal from '../components/PastDueInvoicesModal';
 // EMERGENCY REMOVED: OverdueInvoiceModal and useOverdueInvoices - blocking ALL customers
 
 const DashboardClean: React.FC = () => {
-  const { user, isDemoMode, logout, showOriginalEntityModal, isStaffUser, staffUsername, openProspectsModal } = useAuth();
+  const { user, isDemoMode, logout, showOriginalEntityModal, isStaffUser, staffUsername, openProspectsModal, isShoppingOnBehalf, shoppingOnBehalfAccount, exitShopOnBehalfMode } = useAuth();
   const navigate = useNavigate();
   
   useAutoVersionCheck();
@@ -66,7 +67,20 @@ const DashboardClean: React.FC = () => {
   const [showPromoCodePopup, setShowPromoCodePopup] = useState(false);
   const [inventoryRefreshTimestamp, setInventoryRefreshTimestamp] = useState<string | null>(null);
   const [fontSize, setFontSize] = useState<'smaller' | 'standard' | 'larger'>('standard');
-  // EMERGENCY REMOVED 11/28 - ALL overdue invoice code deleted
+  const [showPastDueModal, setShowPastDueModal] = useState(false);
+  const [pastDueChecked, setPastDueChecked] = useState(false);
+
+  // Check for past due invoices when user logs in (non-staff, non-demo, non-admin)
+  useEffect(() => {
+    if (user?.accountNumber && !pastDueChecked && !isDemoMode && !isStaffUser) {
+      const accountNum = parseInt(user.accountNumber, 10);
+      // Skip admin accounts (like 999, 99)
+      if (!isNaN(accountNum) && accountNum > 100) {
+        setShowPastDueModal(true);
+        setPastDueChecked(true);
+      }
+    }
+  }, [user?.accountNumber, pastDueChecked, isDemoMode, isStaffUser]);
 
   const handleDemoTimeout = () => {
     logout();
@@ -423,8 +437,42 @@ const DashboardClean: React.FC = () => {
     <div className="h-screen bg-gray-100 flex flex-col relative">
       {isDemoMode && <DemoModeBanner onTimeout={handleDemoTimeout} />}
       <Header onViewChange={handleViewChange} activeView={activeView} />
-      
-      
+
+      {/* Shop on Behalf Banner */}
+      {isShoppingOnBehalf && shoppingOnBehalfAccount && (
+        <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white px-4 py-3 shadow-lg">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 rounded-lg p-2">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-sm font-medium text-purple-200">Shopping on behalf of customer:</div>
+                <div className="text-lg font-bold">
+                  #{shoppingOnBehalfAccount.accountNumber} - {shoppingOnBehalfAccount.accountName}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-purple-200">
+                Logged in as: {staffUsername}
+              </span>
+              <button
+                onClick={exitShopOnBehalfMode}
+                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-semibold text-sm transition-all flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Exit Customer Mode
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col h-[85vh]">
         {activeView === 'products' ? (
           <>
@@ -651,7 +699,17 @@ const DashboardClean: React.FC = () => {
         onClose={() => setShowPromoCodePopup(false)}
       />
 
-      {/* EMERGENCY DISABLED 11/28 - Overdue modal completely removed */}
+      {/* Past Due Invoices Modal */}
+      {user?.accountNumber && (
+        <PastDueInvoicesModal
+          isOpen={showPastDueModal}
+          onClose={() => setShowPastDueModal(false)}
+          accountNumber={parseInt(user.accountNumber, 10)}
+          onPaymentComplete={() => {
+            // Optionally refresh data after payment
+          }}
+        />
+      )}
     </div>
   );
 };

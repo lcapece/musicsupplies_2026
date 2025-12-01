@@ -177,7 +177,9 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
       st_state: fullAccount.state,
       st_zip: fullAccount.zip,
       st_contact: fullAccount.contact,
-      st_phone: fullAccount.phone
+      st_phone: fullAccount.phone,
+      st_mobile: fullAccount.mobile_phone,
+      st_email: fullAccount.email_address
     }));
   }, [fetchAccount]);
 
@@ -407,63 +409,83 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
           )}
         </div>
 
-        {/* Row 2: Bill To & Ship To - Side by side, minimal height */}
+        {/* Row 2: Bill To & Ship To - Side by side, compact */}
         <div className="flex gap-3 px-3 py-1 border-b border-gray-300">
           {/* Bill To - with gridlines */}
           <div className="flex-1 border-2 border-black p-1.5">
-            <div className="text-sm font-bold underline mb-0.5">Bill To:</div>
+            <div className="text-xs font-bold underline mb-0.5">Bill To:</div>
             {account ? (
-              <div className="text-[13px] leading-snug">
-                <div className="font-semibold border-b border-gray-300 py-0.5">{account.acct_name}</div>
-                <div className="border-b border-gray-300 py-0.5">{account.address}</div>
-                <div className="border-b border-gray-300 py-0.5">{account.city}, {account.state} {account.zip}</div>
-                {account.contact && <div className="border-b border-gray-300 py-0.5">Attn: {account.contact}</div>}
-                {account.phone && <div className="text-gray-600 py-0.5">{formatPhoneDisplay(account.phone)}</div>}
+              <div className="text-[11px] leading-tight">
+                <div className="font-semibold border-b border-gray-300 py-0.5 h-[22px]">{account.acct_name}</div>
+                <div className="border-b border-gray-300 py-0.5 h-[22px]">{account.address || '\u00A0'}</div>
+                <div className="border-b border-gray-300 py-0.5 h-[22px]">
+                  {account.city || account.state || account.zip
+                    ? `${account.city || ''}${account.city && account.state ? ', ' : ''}${account.state || ''} ${account.zip || ''}`.trim()
+                    : '\u00A0'}
+                </div>
+                <div className="border-b border-gray-300 py-0.5 h-[22px]">
+                  {account.contact ? `Attn: ${account.contact}` : '\u00A0'}
+                </div>
+                <div className="py-0.5 flex h-[22px]">
+                  <span className="w-[140px] min-w-[140px]">Ph: {formatPhoneDisplay(account.phone) || '-'}</span>
+                  <span className="w-[140px] min-w-[140px]">Cell: {formatPhoneDisplay(account.mobile_phone) || '-'}</span>
+                  <span className="flex-1 truncate">Email: {account.email_address || '-'}</span>
+                </div>
               </div>
             ) : (
-              <div className="text-[13px] text-gray-400 italic">Select account</div>
+              <div className="text-[11px] leading-tight">
+                <div className="font-semibold border-b border-gray-300 py-0.5 h-[22px] text-gray-400 italic">Select account</div>
+                <div className="border-b border-gray-300 py-0.5 h-[22px]">&nbsp;</div>
+                <div className="border-b border-gray-300 py-0.5 h-[22px]">&nbsp;</div>
+                <div className="border-b border-gray-300 py-0.5 h-[22px]">&nbsp;</div>
+                <div className="py-0.5 flex h-[22px]">
+                  <span className="w-[140px] min-w-[140px]">Ph: -</span>
+                  <span className="w-[140px] min-w-[140px]">Cell: -</span>
+                  <span className="flex-1">Email: -</span>
+                </div>
+              </div>
             )}
           </div>
 
-          {/* Ship To - with gridlines */}
+          {/* Ship To - with gridlines - matching Bill To structure exactly */}
           <div className="flex-1 border-2 border-black p-1.5">
-            <div className="text-sm font-bold underline mb-0.5">Ship To:</div>
-            <div className="space-y-0">
+            <div className="text-xs font-bold underline mb-0.5">Ship To:</div>
+            <div className="text-[11px] leading-tight">
               <input
                 type="text"
                 value={formData.st_name || ''}
                 onChange={(e) => handleInputChange('st_name', e.target.value)}
                 placeholder="Name"
-                className="w-full px-1 py-0.5 text-[13px] border border-gray-400"
+                className="w-full px-1 py-0.5 text-[11px] border border-gray-400 h-[22px] font-semibold"
               />
               <input
                 type="text"
                 value={formData.st_address || ''}
                 onChange={(e) => handleInputChange('st_address', e.target.value)}
                 placeholder="Address"
-                className="w-full px-1 py-0.5 text-[13px] border border-gray-400 border-t-0"
+                className="w-full px-1 py-0.5 text-[11px] border border-gray-400 border-t-0 h-[22px]"
               />
-              <div className="flex">
+              <div className="flex h-[22px]">
                 <input
                   type="text"
                   value={formData.st_city || ''}
                   onChange={(e) => handleInputChange('st_city', e.target.value)}
                   placeholder="City"
-                  className="flex-1 px-1 py-0.5 text-[13px] border border-gray-400 border-t-0"
+                  className="flex-1 px-1 py-0.5 text-[11px] border border-gray-400 border-t-0"
                 />
                 <input
                   type="text"
                   value={formData.st_state || ''}
                   onChange={(e) => handleInputChange('st_state', e.target.value)}
                   placeholder="ST"
-                  className="w-12 px-1 py-0.5 text-[13px] border border-gray-400 border-t-0 border-l-0 text-center"
+                  className="w-10 px-1 py-0.5 text-[11px] border border-gray-400 border-t-0 border-l-0 text-center"
                 />
                 <input
                   type="text"
                   value={formData.st_zip || ''}
                   onChange={(e) => handleInputChange('st_zip', e.target.value)}
                   placeholder="ZIP"
-                  className="w-20 px-1 py-0.5 text-[13px] border border-gray-400 border-t-0 border-l-0"
+                  className="w-16 px-1 py-0.5 text-[11px] border border-gray-400 border-t-0 border-l-0"
                 />
               </div>
               <input
@@ -471,8 +493,31 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
                 value={formData.st_contact || ''}
                 onChange={(e) => handleInputChange('st_contact', e.target.value)}
                 placeholder="Attn / Contact"
-                className="w-full px-1 py-0.5 text-[13px] border border-gray-400 border-t-0"
+                className="w-full px-1 py-0.5 text-[11px] border border-gray-400 border-t-0 h-[22px]"
               />
+              <div className="flex h-[22px]">
+                <input
+                  type="text"
+                  value={formData.st_phone || ''}
+                  onChange={(e) => handleInputChange('st_phone', e.target.value)}
+                  placeholder="Phone"
+                  className="w-[140px] min-w-[140px] px-1 py-0.5 text-[11px] border border-gray-400 border-t-0"
+                />
+                <input
+                  type="text"
+                  value={formData.st_mobile || ''}
+                  onChange={(e) => handleInputChange('st_mobile', e.target.value)}
+                  placeholder="Cell"
+                  className="w-[140px] min-w-[140px] px-1 py-0.5 text-[11px] border border-gray-400 border-t-0 border-l-0"
+                />
+                <input
+                  type="email"
+                  value={formData.st_email || ''}
+                  onChange={(e) => handleInputChange('st_email', e.target.value)}
+                  placeholder="Email"
+                  className="flex-1 px-1 py-0.5 text-[11px] border border-gray-400 border-t-0 border-l-0"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -488,17 +533,67 @@ const InvoiceModal: React.FC<InvoiceModalProps> = ({
           />
         </div>
 
-        {/* Row 4: Totals Section */}
+        {/* Row 4: Payment History & Totals Section */}
         <div className="flex justify-between items-start px-3 py-2 border-t border-gray-300 bg-gray-50">
-          {/* Comments */}
+          {/* Payment History Log */}
           <div className="flex-1 mr-4">
-            <label className="block text-[10px] font-bold text-gray-600 mb-0.5">Notes/Comments</label>
-            <textarea
-              value={formData.gen_comments || ''}
-              onChange={(e) => handleInputChange('gen_comments', e.target.value)}
-              className="w-full h-16 px-2 py-1 text-[11px] border border-gray-400 resize-none"
-              placeholder="Invoice notes..."
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[10px] font-bold text-gray-600">Payment History</label>
+              {!isNewInvoice && invoice?.ivd && (
+                <button
+                  onClick={() => setShowPaymentModal(true)}
+                  className="px-2 py-0.5 text-[9px] bg-green-600 hover:bg-green-700 text-white rounded"
+                >
+                  + Add Payment
+                </button>
+              )}
+            </div>
+            <div className="border border-black bg-white max-h-24 overflow-y-auto">
+              <table className="w-full text-[10px] border-collapse">
+                <thead className="bg-gray-100 sticky top-0">
+                  <tr>
+                    <th className="px-2 py-0.5 text-left border-b border-black font-bold">Date</th>
+                    <th className="px-2 py-0.5 text-left border-b border-black font-bold">Type</th>
+                    <th className="px-2 py-0.5 text-right border-b border-black font-bold">Amount</th>
+                    <th className="px-2 py-0.5 text-left border-b border-black font-bold">Reference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-2 py-2 text-center text-gray-400 italic">
+                        No payments recorded
+                      </td>
+                    </tr>
+                  ) : (
+                    payments.map((payment, idx) => (
+                      <tr key={payment.paymentid || idx} className="hover:bg-gray-50 border-b border-gray-200 last:border-b-0">
+                        <td className="px-2 py-0.5">
+                          {payment.paymentdate ? new Date(payment.paymentdate).toLocaleDateString() : '-'}
+                        </td>
+                        <td className="px-2 py-0.5">{payment.paymenttype || '-'}</td>
+                        <td className="px-2 py-0.5 text-right font-semibold text-green-700">
+                          {formatCurrency(payment.paymentamount || 0)}
+                        </td>
+                        <td className="px-2 py-0.5 text-gray-500 truncate max-w-[100px]" title={payment.reference || ''}>
+                          {payment.reference || '-'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Small notes field */}
+            <div className="mt-1">
+              <input
+                type="text"
+                value={formData.gen_comments || ''}
+                onChange={(e) => handleInputChange('gen_comments', e.target.value)}
+                className="w-full px-2 py-0.5 text-[10px] border border-gray-400"
+                placeholder="Invoice notes..."
+              />
+            </div>
           </div>
 
           {/* Totals Table */}

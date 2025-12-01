@@ -68,6 +68,17 @@ interface AuthContextType {
   showSecurityBridge: boolean;
   handleSecurityBridgeSuccess: () => Promise<void>;
   handleSecurityBridgeFailure: () => Promise<void>;
+  // Shop on behalf of customer feature
+  showSuperUserChoiceModal: boolean;
+  closeSuperUserChoiceModal: () => void;
+  handleChooseBackend: () => void;
+  handleChooseShopOnBehalf: () => void;
+  showShopOnBehalfModal: boolean;
+  closeShopOnBehalfModal: () => void;
+  handleSelectShopOnBehalfCustomer: (accountNumber: string, accountName: string) => Promise<void>;
+  isShoppingOnBehalf: boolean;
+  shoppingOnBehalfAccount: { accountNumber: string; accountName: string } | null;
+  exitShopOnBehalfMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -124,7 +135,18 @@ const AuthContext = createContext<AuthContextType>({
   closePurchaseOrderModal: () => {},
   showSecurityBridge: false,
   handleSecurityBridgeSuccess: async () => {},
-  handleSecurityBridgeFailure: async () => {}
+  handleSecurityBridgeFailure: async () => {},
+  // Shop on behalf of customer feature
+  showSuperUserChoiceModal: false,
+  closeSuperUserChoiceModal: () => {},
+  handleChooseBackend: () => {},
+  handleChooseShopOnBehalf: () => {},
+  showShopOnBehalfModal: false,
+  closeShopOnBehalfModal: () => {},
+  handleSelectShopOnBehalfCustomer: async () => {},
+  isShoppingOnBehalf: false,
+  shoppingOnBehalfAccount: null,
+  exitShopOnBehalfMode: () => {}
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -158,6 +180,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [showPurchaseOrderModal, setShowPurchaseOrderModal] = useState<boolean>(false);
   const [showSecurityBridge, setShowSecurityBridge] = useState<boolean>(false);
   const [pendingUserData, setPendingUserData] = useState<any>(null);
+  // Shop on behalf of customer feature
+  const [showSuperUserChoiceModal, setShowSuperUserChoiceModal] = useState<boolean>(false);
+  const [showShopOnBehalfModal, setShowShopOnBehalfModal] = useState<boolean>(false);
+  const [isShoppingOnBehalf, setIsShoppingOnBehalf] = useState<boolean>(false);
+  const [shoppingOnBehalfAccount, setShoppingOnBehalfAccount] = useState<{ accountNumber: string; accountName: string } | null>(null);
 
   // Function to calculate the highest eligible discount for a user
   const calculateBestDiscount = async (accountNumber: string): Promise<void> => {
@@ -563,7 +590,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         const { data: staffData, error: staffError } = await supabase
           .from('staff_management')
-          .select('username, user_full_name, security_level, password_hash, bridge_code')
+          .select('username, user_full_name, security_level, password_hash, bridge_code, allow_product_edit, default_panel')
           .ilike('username', identifier)
           .single();
 
@@ -602,6 +629,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               mobile_phone: '',
               requires_password_change: false,
               is_special_admin: staffData.security_level === 'super_admin',
+              allow_product_edit: staffData.allow_product_edit !== false,
+              default_panel: staffData.default_panel,
               security_level: staffData.security_level
             };
 
@@ -1521,6 +1550,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Clear pending data
     setPendingUserData(null);
+
+    // Show SuperUserChoiceModal after successful security bridge for superusers
+    const securityLevel = staffUser.security_level?.toLowerCase().replace(/[_\s]/g, '') || '';
+    const isSuperUserLevel = securityLevel === 'superuser' || securityLevel === 'superadmin';
+    if (isSuperUserLevel) {
+      setShowSuperUserChoiceModal(true);
+    }
   };
 
   const handleSecurityBridgeFailure = async () => {
@@ -1622,6 +1658,103 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Shop on behalf handlers
+  const closeSuperUserChoiceModal = () => {
+    setShowSuperUserChoiceModal(false);
+  };
+
+  const handleChooseBackend = () => {
+    setShowSuperUserChoiceModal(false);
+    // Navigate to CRM/backend (handled by Login component via navigation)
+    if (typeof window !== 'undefined') {
+      window.location.href = '/crm';
+    }
+  };
+
+  const handleChooseShopOnBehalf = () => {
+    setShowSuperUserChoiceModal(false);
+    setShowShopOnBehalfModal(true);
+  };
+
+  const closeShopOnBehalfModal = () => {
+    setShowShopOnBehalfModal(false);
+  };
+
+  const handleSelectShopOnBehalfCustomer = async (accountNumber: string, accountName: string) => {
+    try {
+      // Fetch the full customer account data
+      const accountData = await fetchUserAccount(accountNumber);
+      if (!accountData) {
+        setError('Could not load selected customer account.');
+        return;
+      }
+
+      // Set the shopping on behalf state
+      setIsShoppingOnBehalf(true);
+      setShoppingOnBehalfAccount({ accountNumber, accountName });
+
+      // Set up the customer account as the current user but keep staff context
+      setUser(accountData);
+      sessionManager.setSession({
+        ...accountData,
+        staff_username: staffUsername,
+        is_shopping_on_behalf: true,
+        shopping_on_behalf_account: { accountNumber, accountName }
+      });
+
+      // Set JWT claims for the selected customer account
+      try {
+        const acctNum = parseInt(accountNumber, 10);
+        if (!isNaN(acctNum)) {
+          await supabase.rpc('set_admin_jwt_claims', {
+            p_account_number: acctNum
+          });
+        }
+      } catch (claimsError) {
+        console.error('[AuthContext] Failed to set JWT claims for shop-on-behalf account:', claimsError);
+      }
+
+      // Calculate discounts for the selected account
+      await calculateBestDiscount(accountNumber);
+
+      // Initialize activity tracking for the selected account
+      await activityTracker.initSession(parseInt(accountNumber, 10), accountNumber);
+
+      // Close modals and navigate to shopping
+      setShowShopOnBehalfModal(false);
+
+      // Navigate to shopping page
+      if (typeof window !== 'undefined') {
+        window.location.href = '/shopping?shopOnBehalf=true';
+      }
+    } catch (err) {
+      console.error('Error setting up shop on behalf:', err);
+      setError('Failed to set up shopping session for customer.');
+    }
+  };
+
+  const exitShopOnBehalfMode = () => {
+    setIsShoppingOnBehalf(false);
+    setShoppingOnBehalfAccount(null);
+    // Reset session to staff user
+    if (staffUsername) {
+      sessionManager.setSession({
+        accountNumber: staffUsername,
+        acctName: staffUsername,
+        address: '',
+        city: '',
+        state: '',
+        zip: '',
+        is_staff: true,
+        staff_username: staffUsername
+      });
+    }
+    // Navigate back to backend
+    if (typeof window !== 'undefined') {
+      window.location.href = '/crm';
+    }
+  };
+
   // Computed value: check if user is a superuser (case-insensitive, handle underscores)
   const isSuperUser = user?.security_level ?
     user.security_level.toLowerCase().replace(/[_\s]/g, '') === 'superuser' ||
@@ -1683,7 +1816,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       closePurchaseOrderModal,
       showSecurityBridge,
       handleSecurityBridgeSuccess,
-      handleSecurityBridgeFailure
+      handleSecurityBridgeFailure,
+      // Shop on behalf of customer feature
+      showSuperUserChoiceModal,
+      closeSuperUserChoiceModal,
+      handleChooseBackend,
+      handleChooseShopOnBehalf,
+      showShopOnBehalfModal,
+      closeShopOnBehalfModal,
+      handleSelectShopOnBehalfCustomer,
+      isShoppingOnBehalf,
+      shoppingOnBehalfAccount,
+      exitShopOnBehalfMode
     }}>
       {children}
     </AuthContext.Provider>

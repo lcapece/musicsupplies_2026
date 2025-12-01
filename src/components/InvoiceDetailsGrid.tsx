@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { InvoiceDetail, ProductLookup } from '../types';
 import ProductLookupDropdown from './ProductLookupDropdown';
 
@@ -15,6 +15,25 @@ interface EditingCell {
   field: keyof InvoiceDetail;
 }
 
+// New line item row state
+interface NewLineState {
+  partnumber: string;
+  description: string;
+  qtyordered: number;
+  qtyshipped: number;
+  unitcost: number;
+  unitnet: number;
+}
+
+const emptyNewLine: NewLineState = {
+  partnumber: '',
+  description: '',
+  qtyordered: 1,
+  qtyshipped: 0,
+  unitcost: 0,
+  unitnet: 0
+};
+
 const InvoiceDetailsGrid: React.FC<InvoiceDetailsGridProps> = ({
   invoiceId,
   details,
@@ -24,12 +43,22 @@ const InvoiceDetailsGrid: React.FC<InvoiceDetailsGridProps> = ({
 }) => {
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [editValue, setEditValue] = useState<string>('');
-  const [addingNew, setAddingNew] = useState(false);
+  const [newLine, setNewLine] = useState<NewLineState>(emptyNewLine);
+  const [isProductSelected, setIsProductSelected] = useState(false);
+  const qtyInputRef = useRef<HTMLInputElement>(null);
 
   const formatCurrency = (amount: number | null | undefined): string => {
     if (amount === null || amount === undefined) return '-';
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   };
+
+  // Focus qty input after product selection
+  useEffect(() => {
+    if (isProductSelected && qtyInputRef.current) {
+      qtyInputRef.current.focus();
+      qtyInputRef.current.select();
+    }
+  }, [isProductSelected]);
 
   // Handle cell click to start editing
   const handleCellClick = (linekey: number, field: keyof InvoiceDetail, currentValue: any) => {
@@ -78,9 +107,34 @@ const InvoiceDetailsGrid: React.FC<InvoiceDetailsGridProps> = ({
     }
   };
 
-  // Handle product selection for new line
+  // Handle product selection for new line - fills in default values
   const handleProductSelect = (product: ProductLookup | null) => {
-    if (!product || !invoiceId) return;
+    if (!product) {
+      setNewLine(emptyNewLine);
+      setIsProductSelected(false);
+      return;
+    }
+
+    // Fill in defaults from the product
+    setNewLine({
+      partnumber: product.partnumber,
+      description: product.description || '',
+      qtyordered: 1,
+      qtyshipped: 0,
+      unitcost: product.price || 0,
+      unitnet: product.price || 0
+    });
+    setIsProductSelected(true);
+  };
+
+  // Handle changes to new line fields
+  const handleNewLineChange = (field: keyof NewLineState, value: string | number) => {
+    setNewLine(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Add the new line to the invoice
+  const handleAddNewLine = () => {
+    if (!newLine.partnumber) return;
 
     const newLineKey = details.length > 0
       ? Math.max(...details.map(d => d.linekey)) + 1
@@ -88,18 +142,29 @@ const InvoiceDetailsGrid: React.FC<InvoiceDetailsGridProps> = ({
 
     const newDetail: InvoiceDetail = {
       linekey: newLineKey,
-      ivd: invoiceId,
-      partnumber: product.partnumber,
-      description: product.description,
-      unitnet: product.price || 0,
-      unitcost: product.price || 0,
-      qtyordered: 1,
-      qtyshipped: 0,
+      ivd: invoiceId || 0, // Will be set properly when invoice is saved
+      partnumber: newLine.partnumber,
+      description: newLine.description,
+      unitnet: newLine.unitnet,
+      unitcost: newLine.unitcost,
+      qtyordered: newLine.qtyordered,
+      qtyshipped: newLine.qtyshipped,
       qtybackordered: 0
     };
 
     onChange([...details, newDetail]);
-    setAddingNew(false);
+
+    // Reset for next entry
+    setNewLine(emptyNewLine);
+    setIsProductSelected(false);
+  };
+
+  // Handle Enter key in new line fields to add the line
+  const handleNewLineKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && newLine.partnumber) {
+      e.preventDefault();
+      handleAddNewLine();
+    }
   };
 
   // Delete line item
@@ -139,6 +204,12 @@ const InvoiceDetailsGrid: React.FC<InvoiceDetailsGridProps> = ({
     );
   };
 
+  // Calculate extended values for new line preview
+  const newLineQty = newLine.qtyshipped || newLine.qtyordered || 0;
+  const newLineExtNet = newLineQty * newLine.unitnet;
+  const newLineExtCost = newLineQty * newLine.unitcost;
+  const newLineExtProfit = newLineExtNet - newLineExtCost;
+
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center border border-black bg-white">
@@ -149,108 +220,178 @@ const InvoiceDetailsGrid: React.FC<InvoiceDetailsGridProps> = ({
 
   return (
     <div className="h-full flex flex-col border border-black bg-white">
-      {/* Add Item Row */}
-      {!readOnly && (
-        <div className="flex items-center gap-2 px-2 py-1 bg-gray-100 border-b border-black">
-          {addingNew ? (
-            <>
-              <span className="text-[10px] font-bold">Add Product:</span>
-              <div className="flex-1 max-w-sm">
-                <ProductLookupDropdown
-                  value={null}
-                  onChange={handleProductSelect}
-                  autoFocus
-                  placeholder="Search part #, description..."
-                />
-              </div>
-              <button
-                onClick={() => setAddingNew(false)}
-                className="px-2 py-0.5 text-[10px] bg-gray-200 hover:bg-gray-300 border border-gray-400"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => setAddingNew(true)}
-              className="px-2 py-0.5 text-[10px] bg-green-600 hover:bg-green-700 text-white border border-green-800"
-            >
-              + Add Line Item
-            </button>
-          )}
-        </div>
-      )}
-
       {/* Table - Traditional style with black borders */}
       <div className="flex-1 overflow-auto">
         <table className="w-full border-collapse text-[10px]">
-          <thead className="sticky top-0 bg-white">
+          <thead className="sticky top-0 bg-white z-10">
             <tr>
-              <th className="px-2 py-1 text-center border border-black font-bold w-16">Qty Ord</th>
-              <th className="px-2 py-1 text-center border border-black font-bold w-16">Qty Shp</th>
-              <th className="px-2 py-1 text-left border border-black font-bold w-28">Part Number</th>
-              <th className="px-2 py-1 text-left border border-black font-bold">Description</th>
-              <th className="px-2 py-1 text-right border border-black font-bold w-20">Unit Net</th>
-              <th className="px-2 py-1 text-right border border-black font-bold w-24">Extended Net</th>
-              {!readOnly && <th className="px-1 py-1 border border-black font-bold w-8"></th>}
+              <th className="px-1 py-1 text-center border border-black font-bold w-32 text-red-600">Part #</th>
+              <th className="px-1 py-1 text-center border border-black font-bold w-14 text-red-600">Qty Ord</th>
+              <th className="px-1 py-1 text-center border border-black font-bold w-14 text-red-600">Qty Shp</th>
+              <th className="px-1 py-1 text-center border border-black font-bold text-red-600">Description</th>
+              <th className="px-1 py-1 text-center border border-black font-bold w-20 text-red-600">Unit Cost</th>
+              <th className="px-1 py-1 text-center border border-black font-bold w-20 text-red-600">Unit Net</th>
+              <th className="px-1 py-1 text-center border border-black font-bold w-20 text-red-600">Ext Net</th>
+              <th className="px-1 py-1 text-center border border-black font-bold w-20 text-red-600">Ext Profit</th>
+              {!readOnly && <th className="px-1 py-1 border border-black font-bold w-8 text-red-600"></th>}
             </tr>
           </thead>
           <tbody>
-            {details.length === 0 ? (
-              <tr>
-                <td colSpan={readOnly ? 6 : 7} className="px-4 py-8 text-center text-gray-400 border border-black">
-                  No line items. Click "Add Line Item" to begin.
+            {/* Live Entry Row - Always visible at top when not readOnly */}
+            {!readOnly && (
+              <tr className="bg-green-50 border-2 border-green-400">
+                <td className="px-1 py-0.5 border border-green-300">
+                  <ProductLookupDropdown
+                    value={isProductSelected ? newLine.partnumber : null}
+                    onChange={handleProductSelect}
+                    placeholder="Type part # or search..."
+                    compact
+                    autoFocus={!isProductSelected}
+                  />
+                </td>
+                <td className="px-1 py-0.5 border border-green-300">
+                  <input
+                    ref={qtyInputRef}
+                    type="number"
+                    value={newLine.qtyordered}
+                    onChange={(e) => handleNewLineChange('qtyordered', parseInt(e.target.value) || 0)}
+                    onKeyDown={handleNewLineKeyDown}
+                    disabled={!isProductSelected}
+                    className="w-full px-1 py-0.5 text-[10px] text-center border border-gray-300 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    min="0"
+                  />
+                </td>
+                <td className="px-1 py-0.5 border border-green-300">
+                  <input
+                    type="number"
+                    value={newLine.qtyshipped}
+                    onChange={(e) => handleNewLineChange('qtyshipped', parseInt(e.target.value) || 0)}
+                    onKeyDown={handleNewLineKeyDown}
+                    disabled={!isProductSelected}
+                    className="w-full px-1 py-0.5 text-[10px] text-center border border-gray-300 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                    min="0"
+                  />
+                </td>
+                <td className="px-1 py-0.5 border border-green-300">
+                  <input
+                    type="text"
+                    value={newLine.description}
+                    onChange={(e) => handleNewLineChange('description', e.target.value)}
+                    onKeyDown={handleNewLineKeyDown}
+                    disabled={!isProductSelected}
+                    placeholder={isProductSelected ? '' : 'Select a product...'}
+                    className="w-full px-1 py-0.5 text-[10px] border border-gray-300 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                  />
+                </td>
+                <td className="px-1 py-0.5 border border-green-300">
+                  <input
+                    type="number"
+                    value={newLine.unitcost}
+                    onChange={(e) => handleNewLineChange('unitcost', parseFloat(e.target.value) || 0)}
+                    onKeyDown={handleNewLineKeyDown}
+                    disabled={!isProductSelected}
+                    step="0.01"
+                    className="w-full px-1 py-0.5 text-[10px] text-right border border-gray-300 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                  />
+                </td>
+                <td className="px-1 py-0.5 border border-green-300">
+                  <input
+                    type="number"
+                    value={newLine.unitnet}
+                    onChange={(e) => handleNewLineChange('unitnet', parseFloat(e.target.value) || 0)}
+                    onKeyDown={handleNewLineKeyDown}
+                    disabled={!isProductSelected}
+                    step="0.01"
+                    className="w-full px-1 py-0.5 text-[10px] text-right border border-gray-300 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+                  />
+                </td>
+                <td className="px-1 py-0.5 border border-green-300 text-right text-[10px] font-semibold text-gray-500">
+                  {isProductSelected ? formatCurrency(newLineExtNet) : '-'}
+                </td>
+                <td className={`px-1 py-0.5 border border-green-300 text-right text-[10px] font-semibold ${newLineExtProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {isProductSelected ? formatCurrency(newLineExtProfit) : '-'}
+                </td>
+                <td className="px-1 py-0.5 border border-green-300 text-center">
+                  <button
+                    onClick={handleAddNewLine}
+                    disabled={!isProductSelected || !newLine.partnumber}
+                    className="px-1.5 py-0.5 text-[9px] font-bold bg-green-600 hover:bg-green-700 text-white rounded disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Add line (Enter)"
+                  >
+                    +
+                  </button>
                 </td>
               </tr>
-            ) : (
-              details.map((detail) => {
-                const qty = detail.qtyshipped || detail.qtyordered || 0;
-                const extended = qty * (detail.unitnet || 0);
-
-                return (
-                  <tr key={detail.linekey} className="hover:bg-gray-50">
-                    <td className="px-2 py-1 border border-black text-center">
-                      {renderCell(detail, 'qtyordered', detail.qtyordered, true)}
-                    </td>
-                    <td className="px-2 py-1 border border-black text-center">
-                      {renderCell(detail, 'qtyshipped', detail.qtyshipped, true)}
-                    </td>
-                    <td className="px-2 py-1 border border-black">
-                      {detail.partnumber || '-'}
-                    </td>
-                    <td className="px-2 py-1 border border-black">
-                      {renderCell(detail, 'description', detail.description)}
-                    </td>
-                    <td className="px-2 py-1 border border-black text-right">
-                      {renderCell(detail, 'unitnet', detail.unitnet, true, true)}
-                    </td>
-                    <td className="px-2 py-1 border border-black text-right font-semibold">
-                      {formatCurrency(extended)}
-                    </td>
-                    {!readOnly && (
-                      <td className="px-1 py-1 border border-black text-center">
-                        <button
-                          onClick={() => handleDeleteLine(detail.linekey)}
-                          className="text-red-600 hover:text-red-800 font-bold"
-                          title="Delete line"
-                        >
-                          X
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                );
-              })
             )}
+
+            {/* Existing line items */}
+            {details.map((detail) => {
+              const qty = detail.qtyshipped || detail.qtyordered || 0;
+              const extendedNet = qty * (detail.unitnet || 0);
+              const extendedCost = qty * (detail.unitcost || 0);
+              const extendedProfit = extendedNet - extendedCost;
+
+              return (
+                <tr key={detail.linekey} className="hover:bg-gray-50">
+                  <td className="px-1 py-1 border border-black font-mono text-[9px]">
+                    {detail.partnumber || '-'}
+                  </td>
+                  <td className="px-1 py-1 border border-black text-center">
+                    {renderCell(detail, 'qtyordered', detail.qtyordered, true)}
+                  </td>
+                  <td className="px-1 py-1 border border-black text-center">
+                    {renderCell(detail, 'qtyshipped', detail.qtyshipped, true)}
+                  </td>
+                  <td className="px-1 py-1 border border-black truncate max-w-[12rem]" title={detail.description}>
+                    {renderCell(detail, 'description', detail.description)}
+                  </td>
+                  <td className="px-1 py-1 border border-black text-right">
+                    {renderCell(detail, 'unitcost', detail.unitcost, true, true)}
+                  </td>
+                  <td className="px-1 py-1 border border-black text-right">
+                    {renderCell(detail, 'unitnet', detail.unitnet, true, true)}
+                  </td>
+                  <td className="px-1 py-1 border border-black text-right font-semibold">
+                    {formatCurrency(extendedNet)}
+                  </td>
+                  <td className={`px-1 py-1 border border-black text-right font-semibold ${extendedProfit >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+                    {formatCurrency(extendedProfit)}
+                  </td>
+                  {!readOnly && (
+                    <td className="px-1 py-1 border border-black text-center">
+                      <button
+                        onClick={() => handleDeleteLine(detail.linekey)}
+                        className="text-red-600 hover:text-red-800 font-bold text-[9px]"
+                        title="Delete line"
+                      >
+                        X
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
+
+            {/* Empty rows placeholder when no items */}
+            {details.length === 0 && (
+              <tr>
+                <td colSpan={readOnly ? 8 : 9} className="px-4 py-6 text-center text-gray-400 border border-black italic">
+                  {readOnly ? 'No line items.' : 'Search for a product above to add line items'}
+                </td>
+              </tr>
+            )}
+
             {/* Empty rows to fill space for traditional look */}
-            {details.length > 0 && details.length < 10 && Array.from({ length: 10 - details.length }).map((_, i) => (
+            {details.length > 0 && details.length < 8 && Array.from({ length: 8 - details.length }).map((_, i) => (
               <tr key={`empty-${i}`}>
-                <td className="px-2 py-1 border border-black">&nbsp;</td>
-                <td className="px-2 py-1 border border-black">&nbsp;</td>
-                <td className="px-2 py-1 border border-black">&nbsp;</td>
-                <td className="px-2 py-1 border border-black">&nbsp;</td>
-                <td className="px-2 py-1 border border-black">&nbsp;</td>
-                <td className="px-2 py-1 border border-black">&nbsp;</td>
+                <td className="px-1 py-1 border border-black">&nbsp;</td>
+                <td className="px-1 py-1 border border-black">&nbsp;</td>
+                <td className="px-1 py-1 border border-black">&nbsp;</td>
+                <td className="px-1 py-1 border border-black">&nbsp;</td>
+                <td className="px-1 py-1 border border-black">&nbsp;</td>
+                <td className="px-1 py-1 border border-black">&nbsp;</td>
+                <td className="px-1 py-1 border border-black">&nbsp;</td>
+                <td className="px-1 py-1 border border-black">&nbsp;</td>
                 {!readOnly && <td className="px-1 py-1 border border-black">&nbsp;</td>}
               </tr>
             ))}

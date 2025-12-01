@@ -120,7 +120,52 @@ interface Contact {
   created_at: string;
 }
 
-type TabType = 'activity' | 'contacts' | 'stats' | 'predictions' | 'crosssell' | 'categorysales';
+type TabType = 'activity' | 'contacts' | 'calls' | 'stats' | 'predictions' | 'crosssell' | 'categorysales';
+
+interface CallHistoryRecord {
+  id: number;
+  call_time: string;
+  call_date: string;
+  direction: 'Inbound' | 'Outbound' | 'Internal';
+  status: 'Answered' | 'Unanswered';
+  extension: string;
+  employee_name: string;
+  phone_number: string;
+  talking_seconds: number;
+  ringing_seconds: number;
+  caller_id_raw: string;
+  call_activity_details: string;
+  contact_name: string;
+  contact_type: 'phone' | 'mobile';
+  has_notes: boolean;
+  note_count: number;
+}
+
+interface CallStats {
+  total_calls: number;
+  inbound_calls: number;
+  outbound_calls: number;
+  answered_calls: number;
+  missed_calls: number;
+  total_talk_minutes: number;
+  avg_call_duration_seconds: number;
+  last_inbound_call: string;
+  last_outbound_call: string;
+  first_call_date: string;
+  unique_employees: number;
+  pending_notes: number;
+}
+
+interface CallNote {
+  id: string;
+  call_record_id: number;
+  account_number: number;
+  note_text: string;
+  note_type: string;
+  created_by: string;
+  created_at: string;
+  is_resolved: boolean;
+}
 
 interface PendingCallback {
   id: string;
@@ -357,6 +402,24 @@ const OutcomeBadge: React.FC<{ outcome: string }> = ({ outcome }) => {
 // ============================================
 // CUSTOMER LIST ITEM COMPONENT
 // ============================================
+// Helper to get phone icon color and style based on days since last outbound call
+const getPhoneCallStyle = (days: number | null | undefined): { bgColor: string; textColor: string; flash: boolean; title: string } => {
+  // No call data = same as 90+ days - red flashing
+  if (days === null || days === undefined) {
+    return { bgColor: 'bg-red-600', textColor: 'text-white', flash: true, title: 'No outbound calls recorded - URGENT!' };
+  }
+  // Called within last 30 days - green
+  if (days <= 30) {
+    return { bgColor: 'bg-emerald-500', textColor: 'text-white', flash: false, title: `Last outbound call: ${days} days ago` };
+  }
+  // Called 31-89 days ago - amber
+  if (days <= 89) {
+    return { bgColor: 'bg-amber-500', textColor: 'text-white', flash: false, title: `Last outbound call: ${days} days ago - needs attention` };
+  }
+  // 90+ days - red flashing
+  return { bgColor: 'bg-red-600', textColor: 'text-white', flash: true, title: `Last outbound call: ${days} days ago - URGENT!` };
+};
+
 const CustomerListItem: React.FC<{
   account: Account;
   isSelected: boolean;
@@ -364,9 +427,12 @@ const CustomerListItem: React.FC<{
   hasCallback?: boolean;
   healthScore?: number;
   hasImminentPrediction?: boolean;
-}> = ({ account, isSelected, onClick, hasCallback, healthScore, hasImminentPrediction }) => {
+  daysSinceCall?: number | null;
+}> = ({ account, isSelected, onClick, hasCallback, healthScore, hasImminentPrediction, daysSinceCall }) => {
   // Get churn-based background color
   const churnColor = getChurnBackgroundColor(healthScore);
+  // Get phone icon styling
+  const phoneStyle = getPhoneCallStyle(daysSinceCall);
 
   return (
     <button
@@ -397,6 +463,23 @@ const CustomerListItem: React.FC<{
         title={hasImminentPrediction ? 'Order prediction within ±15 days' : undefined}
         >
           {account.account_number}
+        </div>
+
+        {/* Phone Icon with Days Since Last Outbound Call */}
+        <div
+          className={`
+            relative flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0
+            ${phoneStyle.bgColor} ${phoneStyle.textColor}
+            ${phoneStyle.flash ? 'phone-flash-urgent' : ''}
+          `}
+          title={phoneStyle.title}
+        >
+          <Phone className="w-3.5 h-3.5" />
+          {daysSinceCall !== null && daysSinceCall !== undefined && (
+            <span className="absolute -bottom-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-inherit text-[10px] font-bold flex items-center justify-center border border-white">
+              {daysSinceCall > 99 ? '99+' : daysSinceCall}
+            </span>
+          )}
         </div>
 
         {/* Content */}
@@ -1947,6 +2030,404 @@ const CategorySalesTab: React.FC<{ account: Account }> = ({ account }) => {
 };
 
 // ============================================
+// CALL HISTORY TAB COMPONENT (3CX Phone System Integration)
+// ============================================
+const CallHistoryTab: React.FC<{ accountNumber: number; staffUsername: string }> = ({ accountNumber, staffUsername }) => {
+  const [calls, setCalls] = useState<CallHistoryRecord[]>([]);
+  const [stats, setStats] = useState<CallStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'all' | 'Inbound' | 'Outbound'>('all');
+  const [selectedCall, setSelectedCall] = useState<CallHistoryRecord | null>(null);
+  const [notes, setNotes] = useState<CallNote[]>([]);
+  const [newNote, setNewNote] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const LIMIT = 25;
+
+  const loadCallHistory = useCallback(async (reset = false) => {
+    if (reset) {
+      setOffset(0);
+      setLoading(true);
+    }
+    try {
+      const currentOffset = reset ? 0 : offset;
+      const { data, error } = await supabase.rpc('get_account_call_history', {
+        p_account_number: accountNumber,
+        p_limit: LIMIT,
+        p_offset: currentOffset,
+        p_direction: filter === 'all' ? null : filter
+      });
+
+      if (error) throw error;
+
+      // Dedupe by id (in case of multiple contact matches)
+      const uniqueCalls = (data || []).reduce((acc: CallHistoryRecord[], call: CallHistoryRecord) => {
+        if (!acc.find(c => c.id === call.id)) {
+          acc.push(call);
+        }
+        return acc;
+      }, []);
+
+      if (reset) {
+        setCalls(uniqueCalls);
+      } else {
+        setCalls(prev => [...prev, ...uniqueCalls.filter((c: CallHistoryRecord) => !prev.find(p => p.id === c.id))]);
+      }
+      setHasMore(uniqueCalls.length === LIMIT);
+    } catch (err) {
+      console.error('Error loading call history:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [accountNumber, filter, offset]);
+
+  const loadStats = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_account_call_stats', {
+        p_account_number: accountNumber
+      });
+      if (error) throw error;
+      if (data && data.length > 0) {
+        setStats(data[0]);
+      }
+    } catch (err) {
+      console.error('Error loading call stats:', err);
+    }
+  }, [accountNumber]);
+
+  const loadNotesForCall = useCallback(async (callId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from('call_notes')
+        .select('*')
+        .eq('call_record_id', callId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setNotes(data || []);
+    } catch (err) {
+      console.error('Error loading notes:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCallHistory(true);
+    loadStats();
+  }, [accountNumber, filter]);
+
+  useEffect(() => {
+    if (selectedCall) {
+      loadNotesForCall(selectedCall.id);
+    }
+  }, [selectedCall, loadNotesForCall]);
+
+  const handleSaveNote = async () => {
+    if (!newNote.trim() || !selectedCall) return;
+    setSavingNote(true);
+    try {
+      const { error } = await supabase.from('call_notes').insert({
+        call_record_id: selectedCall.id,
+        account_number: accountNumber,
+        phone_number: selectedCall.phone_number,
+        note_text: newNote.trim(),
+        note_type: 'follow_up',
+        created_by: staffUsername
+      });
+
+      if (error) throw error;
+      setNewNote('');
+      loadNotesForCall(selectedCall.id);
+      loadCallHistory(true); // Refresh to update note counts
+    } catch (err) {
+      console.error('Error saving note:', err);
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const formatDuration = (seconds: number): string => {
+    if (seconds < 60) return `${seconds}s`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+  };
+
+  const formatCallTime = (timestamp: string): string => {
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const formatRelativeTime = (timestamp: string): string => {
+    if (!timestamp) return 'Never';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  if (loading && calls.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col overflow-hidden bg-gray-50">
+      {/* Stats Summary */}
+      {stats && stats.total_calls > 0 && (
+        <div className="flex-shrink-0 px-4 py-3 bg-white border-b border-gray-200">
+          <div className="grid grid-cols-4 gap-3">
+            <div className="text-center">
+              <div className="text-lg font-bold text-gray-900">{stats.total_calls}</div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wide">Total Calls</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-emerald-600">{stats.inbound_calls}</div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wide">Inbound</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-blue-600">{stats.outbound_calls}</div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wide">Outbound</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-gray-900">{stats.total_talk_minutes || 0}</div>
+              <div className="text-[10px] text-gray-500 uppercase tracking-wide">Talk Mins</div>
+            </div>
+          </div>
+          <div className="flex justify-between mt-2 text-xs text-gray-500">
+            <span>Last inbound: {formatRelativeTime(stats.last_inbound_call)}</span>
+            <span>Last outbound: {formatRelativeTime(stats.last_outbound_call)}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Filter Tabs */}
+      <div className="flex-shrink-0 px-4 py-2 bg-white border-b border-gray-200">
+        <div className="flex gap-2">
+          {(['all', 'Inbound', 'Outbound'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                filter === f
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {f === 'all' ? 'All Calls' : f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Call List + Detail Split */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Call List */}
+        <div className={`${selectedCall ? 'w-1/2' : 'w-full'} overflow-y-auto border-r border-gray-200`}>
+          {calls.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center p-8">
+              <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+                <Phone className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">No Call History</h3>
+              <p className="text-sm text-gray-500 max-w-[280px]">
+                Call records matching this account's phone numbers will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {calls.map((call) => (
+                <div
+                  key={call.id}
+                  onClick={() => setSelectedCall(call)}
+                  className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    selectedCall?.id === call.id ? 'bg-indigo-50 border-l-2 border-indigo-600' : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Direction Icon */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      call.direction === 'Inbound'
+                        ? call.status === 'Answered' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                        : 'bg-blue-100 text-blue-600'
+                    }`}>
+                      {call.direction === 'Inbound' ? (
+                        call.status === 'Answered' ? <PhoneCall className="w-4 h-4" /> : <PhoneOff className="w-4 h-4" />
+                      ) : (
+                        <Phone className="w-4 h-4" />
+                      )}
+                    </div>
+
+                    {/* Call Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm text-gray-900 truncate">
+                          {call.contact_name || call.phone_number}
+                        </span>
+                        {call.has_notes && (
+                          <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-medium rounded">
+                            {call.note_count} note{call.note_count !== 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                        <span>{formatCallTime(call.call_time)}</span>
+                        <span>·</span>
+                        <span>{call.employee_name}</span>
+                        {call.talking_seconds > 0 && (
+                          <>
+                            <span>·</span>
+                            <span className="font-medium text-gray-700">{formatDuration(call.talking_seconds)}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Status Badge */}
+                    <div className={`px-2 py-0.5 text-[10px] font-medium rounded ${
+                      call.status === 'Answered'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {call.status}
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Load More */}
+              {hasMore && (
+                <div className="p-4 text-center">
+                  <button
+                    onClick={() => {
+                      setOffset(prev => prev + LIMIT);
+                      loadCallHistory(false);
+                    }}
+                    className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                  >
+                    Load more calls...
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Call Detail Panel */}
+        {selectedCall && (
+          <div className="w-1/2 flex flex-col overflow-hidden bg-white">
+            {/* Header */}
+            <div className="flex-shrink-0 px-4 py-3 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-gray-900">{selectedCall.contact_name || 'Unknown Contact'}</h4>
+                  <p className="text-xs text-gray-500">{selectedCall.phone_number}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedCall(null)}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              </div>
+            </div>
+
+            {/* Call Details */}
+            <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 bg-gray-50 space-y-2">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-gray-500">Direction:</span>
+                  <span className={`ml-2 font-medium ${
+                    selectedCall.direction === 'Inbound' ? 'text-emerald-600' : 'text-blue-600'
+                  }`}>{selectedCall.direction}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Status:</span>
+                  <span className="ml-2 font-medium">{selectedCall.status}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Duration:</span>
+                  <span className="ml-2 font-medium">{formatDuration(selectedCall.talking_seconds)}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Employee:</span>
+                  <span className="ml-2 font-medium">{selectedCall.employee_name}</span>
+                </div>
+              </div>
+              <div className="text-xs">
+                <span className="text-gray-500">Time:</span>
+                <span className="ml-2">{new Date(selectedCall.call_time).toLocaleString()}</span>
+              </div>
+              {selectedCall.call_activity_details && (
+                <div className="text-xs">
+                  <span className="text-gray-500">Details:</span>
+                  <p className="mt-1 text-gray-700 break-words">{selectedCall.call_activity_details}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Notes Section */}
+            <div className="flex-1 overflow-y-auto px-4 py-3">
+              <h5 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Notes</h5>
+
+              {notes.length === 0 ? (
+                <p className="text-xs text-gray-500 italic">No notes yet for this call.</p>
+              ) : (
+                <div className="space-y-2">
+                  {notes.map((note) => (
+                    <div key={note.id} className="p-2 bg-gray-50 rounded-lg border border-gray-100">
+                      <p className="text-xs text-gray-800">{note.note_text}</p>
+                      <p className="text-[10px] text-gray-500 mt-1">
+                        {note.created_by} · {new Date(note.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Add Note */}
+            <div className="flex-shrink-0 px-4 py-3 border-t border-gray-200 bg-gray-50">
+              <textarea
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                placeholder="Add a note about this call..."
+                rows={2}
+                className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg resize-none
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <button
+                onClick={handleSaveNote}
+                disabled={!newNote.trim() || savingNote}
+                className="mt-2 w-full py-2 bg-indigo-600 text-white text-xs font-medium rounded-lg
+                  hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed
+                  flex items-center justify-center gap-2"
+              >
+                {savingNote ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                Save Note
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ============================================
 // CALLBACKS PANEL COMPONENT
 // ============================================
 const CallbacksPanel: React.FC<{
@@ -2311,6 +2792,7 @@ const CustomerDetailView: React.FC<{
   const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: 'activity', label: 'Activity', icon: <PhoneCall className="w-4 h-4" /> },
     { id: 'contacts', label: 'Contacts', icon: <Users className="w-4 h-4" /> },
+    { id: 'calls', label: 'Phone Log', icon: <Phone className="w-4 h-4" /> },
     { id: 'stats', label: 'Stats', icon: <BarChart3 className="w-4 h-4" /> },
     { id: 'predictions', label: 'Predictions', icon: <Target className="w-4 h-4" /> },
     { id: 'crosssell', label: 'Cross-Sell', icon: <Sparkles className="w-4 h-4" /> },
@@ -2507,6 +2989,9 @@ const CustomerDetailView: React.FC<{
             primaryEmail={account.email_address}
           />
         )}
+        {activeTab === 'calls' && (
+          <CallHistoryTab accountNumber={account.account_number} staffUsername={staffUsername} />
+        )}
         {activeTab === 'stats' && (
           <StatsTab accountNumber={account.account_number} />
         )}
@@ -2533,7 +3018,11 @@ interface AccountHealthSummary {
   health_status: string;
   lifetime_sales_dollars: number;
   order_count_current_90: number;
+  sales_dollars_current_90: number;
+  sales_dollars_prior_90: number;
 }
+
+type SortOption = 'name_asc' | 'sales_180_desc' | 'health_desc';
 
 // Get background color for customer list based on health score (churn rating)
 const getChurnBackgroundColor = (healthScore: number | undefined): string => {
@@ -2562,12 +3051,22 @@ const CRMPage: React.FC = () => {
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [showAllAccounts, setShowAllAccounts] = useState(false);
+  // Super users see all accounts by default
+  const [showAllAccounts, setShowAllAccounts] = useState(isSuperUser);
   const [hideOutOfBusiness, setHideOutOfBusiness] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
   const [accountHealthMap, setAccountHealthMap] = useState<Map<number, AccountHealthSummary>>(new Map());
   const [imminentPredictionAccounts, setImminentPredictionAccounts] = useState<Set<number>>(new Set());
+  const [accountCallDaysMap, setAccountCallDaysMap] = useState<Map<number, number | null>>(new Map());
+  const [sortOption, setSortOption] = useState<SortOption>('name_asc');
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync showAllAccounts when isSuperUser changes (handles auth context loading)
+  useEffect(() => {
+    if (isSuperUser) {
+      setShowAllAccounts(true);
+    }
+  }, [isSuperUser]);
 
   // Load accounts with salesman filter
   useEffect(() => {
@@ -2589,10 +3088,10 @@ const CRMPage: React.FC = () => {
         setAccounts(data || []);
         setFilteredAccounts(data || []);
 
-        // Load account health data for churn coloring
+        // Load account health data for churn coloring and sorting
         const { data: healthData, error: healthError } = await supabase
           .from('agg_account_health')
-          .select('account_number, health_score, health_status, lifetime_sales_dollars, order_count_current_90');
+          .select('account_number, health_score, health_status, lifetime_sales_dollars, order_count_current_90, sales_dollars_current_90, sales_dollars_prior_90');
 
         if (healthError) {
           console.error('Error loading health data:', healthError);
@@ -2621,6 +3120,21 @@ const CRMPage: React.FC = () => {
             accountsWithPredictions.add(p.account_number);
           });
           setImminentPredictionAccounts(accountsWithPredictions);
+        }
+
+        // Load days since last outbound call per account
+        const { data: callDaysData, error: callDaysError } = await supabase
+          .from('v_account_last_outbound_call')
+          .select('account_number, days_since_last_outbound');
+
+        if (callDaysError) {
+          console.error('Error loading call days:', callDaysError);
+        } else if (callDaysData) {
+          const callDaysMap = new Map<number, number | null>();
+          callDaysData.forEach((c: { account_number: number; days_since_last_outbound: number | null }) => {
+            callDaysMap.set(c.account_number, c.days_since_last_outbound);
+          });
+          setAccountCallDaysMap(callDaysMap);
         }
       } catch (err) {
         console.error('Error loading accounts:', err);
@@ -2740,10 +3254,35 @@ const CRMPage: React.FC = () => {
         ...nameMatches,
         ...otherMatches
       ];
+    } else {
+      // No search term - apply selected sort option
+      const getSales180 = (acct: Account): number => {
+        const health = accountHealthMap.get(acct.account_number);
+        if (!health) return 0;
+        return (health.sales_dollars_current_90 || 0) + (health.sales_dollars_prior_90 || 0);
+      };
+
+      const getHealthScore = (acct: Account): number => {
+        const health = accountHealthMap.get(acct.account_number);
+        return health?.health_score ?? 0;
+      };
+
+      switch (sortOption) {
+        case 'name_asc':
+          filtered = [...filtered].sort((a, b) => (a.acct_name || '').localeCompare(b.acct_name || ''));
+          break;
+        case 'sales_180_desc':
+          filtered = [...filtered].sort((a, b) => getSales180(b) - getSales180(a));
+          break;
+        case 'health_desc':
+          // Higher health score = healthier, so those come first
+          filtered = [...filtered].sort((a, b) => getHealthScore(b) - getHealthScore(a));
+          break;
+      }
     }
 
     setFilteredAccounts(filtered);
-  }, [searchTerm, accounts, hideOutOfBusiness]);
+  }, [searchTerm, accounts, hideOutOfBusiness, sortOption, accountHealthMap]);
 
   // Full-page loading overlay for initial data load
   if (loading) {
@@ -2898,8 +3437,23 @@ const CRMPage: React.FC = () => {
               </span>
             </div>
 
+            {/* Sort By dropdown */}
+            <div className="flex items-center gap-2 mt-3">
+              <span className="text-xs text-gray-500 font-medium">Sort:</span>
+              <select
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value as SortOption)}
+                className="flex-1 px-2 py-1.5 bg-white border border-gray-300 rounded-lg text-xs text-gray-700
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer"
+              >
+                <option value="name_asc">Account Name (A-Z)</option>
+                <option value="sales_180_desc">Sales Last 180 Days (High → Low)</option>
+                <option value="health_desc">Health Score (Healthy → At Risk)</option>
+              </select>
+            </div>
+
             {/* Controls row: checkbox and filter */}
-            <div className="flex items-center justify-between mt-3">
+            <div className="flex items-center justify-between mt-2">
               {/* Hide Out of Business Checkbox */}
               <label className="flex items-center gap-2 cursor-pointer group">
                 <input
@@ -2909,7 +3463,7 @@ const CRMPage: React.FC = () => {
                   className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                 />
                 <span className="text-xs text-gray-600 group-hover:text-gray-900 transition-colors">
-                  Hide Out of Business or Dead
+                  Hide Dead
                 </span>
               </label>
 
@@ -2953,6 +3507,7 @@ const CRMPage: React.FC = () => {
                     onClick={() => setSelectedAccount(account)}
                     healthScore={accountHealthMap.get(account.account_number)?.health_score}
                     hasImminentPrediction={imminentPredictionAccounts.has(account.account_number)}
+                    daysSinceCall={accountCallDaysMap.get(account.account_number)}
                   />
                 ))}
               </div>

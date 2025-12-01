@@ -144,7 +144,7 @@ const ProductLookupDropdown: React.FC<ProductLookupDropdownProps> = ({
     const results = scored
       .filter(item => item.score > 0)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 20)
+      .slice(0, 25)
       .map(item => item.product);
 
     setFilteredProducts(results);
@@ -166,10 +166,10 @@ const ProductLookupDropdown: React.FC<ProductLookupDropdownProps> = ({
   const loadProducts = async () => {
     setLoading(true);
     try {
-      // Join with inventory table to get stock levels
+      // Load from products_supabase table with inventory data
       const { data, error } = await supabase
-        .from('lcmd_products')
-        .select('partnumber, description, price, prdmaincat, prdsubcat, image')
+        .from('products_supabase')
+        .select('partnumber, description, price, prdmaincat, prdsubcat, image, brand')
         .order('partnumber', { ascending: true });
 
       if (error) throw error;
@@ -197,8 +197,8 @@ const ProductLookupDropdown: React.FC<ProductLookupDropdownProps> = ({
   const loadProductByPartNumber = async (partnum: string) => {
     try {
       const { data, error } = await supabase
-        .from('lcmd_products')
-        .select('partnumber, description, price, prdmaincat, prdsubcat, image')
+        .from('products_supabase')
+        .select('partnumber, description, price, prdmaincat, prdsubcat, image, brand')
         .eq('partnumber', partnum)
         .single();
 
@@ -295,11 +295,6 @@ const ProductLookupDropdown: React.FC<ProductLookupDropdownProps> = ({
     }
   }, [highlightedIndex]);
 
-  const formatCurrency = (amount: number | null): string => {
-    if (amount === null || amount === undefined) return '-';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-  };
-
   const highlightMatch = (text: string, query: string): React.ReactNode => {
     if (!query.trim() || !text) return text;
     const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
@@ -311,148 +306,135 @@ const ProductLookupDropdown: React.FC<ProductLookupDropdownProps> = ({
     const parts = result.split('|||');
     return parts.map((part, i) => {
       const isMatch = terms.some(term => part.toLowerCase() === term.toLowerCase());
-      return isMatch ? <mark key={i} className="bg-amber-200 text-amber-900 rounded px-0.5">{part}</mark> : part;
+      return isMatch ? <mark key={i} className="bg-yellow-300 text-black font-bold px-0.5">{part}</mark> : part;
     });
   };
-
-  const baseInputClass = compact
-    ? 'w-full px-2 py-1 text-sm border rounded'
-    : 'w-full pl-10 pr-4 py-2.5 text-base border-2 rounded-lg';
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Selected Product Display */}
       {selectedProduct && !isOpen ? (
         <div
-          className={`flex items-center gap-2 ${compact ? 'px-2 py-1 bg-emerald-50 border border-emerald-200 rounded text-sm' : 'px-3 py-2.5 bg-gradient-to-r from-emerald-50 to-white border-2 border-emerald-200 rounded-lg'} cursor-pointer hover:border-emerald-300 transition-all`}
+          className="flex items-center gap-2 px-2 py-1 bg-blue-600 text-white border-2 border-blue-800 rounded cursor-pointer hover:bg-blue-700 transition-all"
           onClick={() => { setIsOpen(true); setSearchQuery(''); inputRef.current?.focus(); }}
         >
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className={`font-mono ${compact ? 'text-xs' : 'text-sm'} font-bold text-emerald-700`}>
-                {selectedProduct.partnumber}
-              </span>
-              {!compact && (
-                <span className="text-slate-600 truncate text-sm">
-                  {selectedProduct.description}
-                </span>
-              )}
-            </div>
-            {compact && selectedProduct.description && (
-              <div className="text-xs text-slate-500 truncate">{selectedProduct.description}</div>
-            )}
+            <span className="font-mono text-xs font-bold">{selectedProduct.partnumber}</span>
+            <span className="mx-2 text-blue-200">|</span>
+            <span className="text-xs truncate">{selectedProduct.description}</span>
           </div>
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); handleClear(); }}
-            className="p-1 text-slate-400 hover:text-red-500 rounded-full hover:bg-red-50 transition-colors"
+            className="p-0.5 text-blue-200 hover:text-white hover:bg-blue-800 rounded transition-colors"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
       ) : (
-        <div className="relative">
-          {!compact && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-              {isSearching || loading ? (
-                <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-              )}
-            </div>
-          )}
-          <input
-            ref={inputRef}
-            type="text"
-            value={searchQuery}
-            onChange={handleInputChange}
-            onFocus={handleInputFocus}
-            onKeyDown={handleKeyDown}
-            disabled={disabled}
-            placeholder={placeholder}
-            autoComplete="off"
-            className={`${baseInputClass} transition-all duration-200 ${
-              disabled ? 'bg-slate-100 border-slate-200 cursor-not-allowed' :
-              isOpen ? 'bg-white border-blue-400 ring-2 ring-blue-100 shadow-md' :
-              'bg-white border-slate-200 hover:border-slate-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
-            }`}
-          />
-        </div>
+        <input
+          ref={inputRef}
+          type="text"
+          value={searchQuery}
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          onKeyDown={handleKeyDown}
+          disabled={disabled}
+          placeholder={placeholder}
+          autoComplete="off"
+          className={`w-full px-2 py-1 text-sm font-bold border-2 rounded transition-all ${
+            disabled ? 'bg-gray-200 border-gray-300 cursor-not-allowed text-gray-500' :
+            isOpen ? 'bg-yellow-100 border-yellow-500 text-black ring-2 ring-yellow-300 shadow-lg' :
+            'bg-yellow-50 border-yellow-400 text-black hover:bg-yellow-100 focus:bg-yellow-100 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-300'
+          }`}
+        />
       )}
 
-      {/* Dropdown Results */}
+      {/* Dropdown Results - Wide and Dense */}
       {isOpen && (searchQuery.trim() || loading) && (
         <div
-          ref={listRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-72 overflow-hidden"
-          style={{ minWidth: compact ? '320px' : 'auto', boxShadow: '0 20px 40px -12px rgba(0,0,0,0.25)' }}
+          className="absolute z-50 left-0 mt-1 bg-white border-2 border-gray-800 rounded shadow-2xl overflow-hidden"
+          style={{
+            width: '50vw',
+            maxWidth: '900px',
+            minWidth: '500px',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
+          }}
         >
-          <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {loading ? 'Loading...' : filteredProducts.length === 0 ? 'No matches' : `${filteredProducts.length} found`}
-            </span>
-            <span className="text-xs text-slate-400">↑↓ Enter Esc</span>
+          {/* Header */}
+          <div className="px-2 py-1 bg-gray-800 text-white flex items-center text-xs font-bold">
+            <div className="w-24">PART #</div>
+            <div className="flex-1">DESCRIPTION</div>
+            <div className="w-48 text-right">CATEGORY</div>
+            <div className="w-16 text-right">PRICE</div>
+            <div className="w-16 text-center">STOCK</div>
           </div>
 
-          <div className="overflow-y-auto max-h-60">
-            {filteredProducts.length === 0 && !loading ? (
-              <div className="px-4 py-6 text-center text-sm text-slate-500">
-                No products found for "{searchQuery}"
+          {/* Results */}
+          <div ref={listRef} className="overflow-y-auto max-h-80">
+            {loading ? (
+              <div className="px-4 py-3 text-center text-sm text-gray-500">
+                Loading products...
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="px-4 py-3 text-center text-sm text-gray-500">
+                No products found for "<span className="font-bold">{searchQuery}</span>"
               </div>
             ) : (
               filteredProducts.map((product, index) => (
                 <div
                   key={product.partnumber}
                   onClick={() => handleSelectProduct(product)}
-                  className={`px-3 py-2 cursor-pointer border-b border-slate-50 last:border-b-0 transition-all ${
-                    index === highlightedIndex ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-slate-50 border-l-4 border-l-transparent'
+                  className={`flex items-center px-2 py-1.5 cursor-pointer border-b border-gray-200 text-xs ${
+                    index === highlightedIndex
+                      ? 'bg-blue-600 text-white'
+                      : index % 2 === 0
+                        ? 'bg-white hover:bg-blue-50'
+                        : 'bg-gray-50 hover:bg-blue-50'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-mono text-sm font-bold text-slate-800">
-                          {highlightMatch(product.partnumber, searchQuery)}
-                        </span>
-                        <span className="text-sm font-semibold text-emerald-600">
-                          {formatCurrency(product.price)}
-                        </span>
-                        {product.inventory !== undefined && product.inventory > 0 && (
-                          <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">
-                            {product.inventory} in stock
-                          </span>
-                        )}
-                        {product.inventory === 0 && (
-                          <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
-                            Out of stock
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-sm text-slate-600 truncate">
-                        {highlightMatch(product.description || '', searchQuery)}
-                      </div>
-                      {(product.prdmaincat || product.prdsubcat) && (
-                        <div className="text-xs text-slate-400 mt-0.5">
-                          {[product.prdmaincat, product.prdsubcat].filter(Boolean).join(' > ')}
-                        </div>
-                      )}
-                    </div>
-                    {index === highlightedIndex && (
-                      <svg className="w-4 h-4 text-blue-500 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
+                  {/* Part Number */}
+                  <div className={`w-24 font-mono font-bold ${index === highlightedIndex ? 'text-yellow-300' : 'text-blue-700'}`}>
+                    {highlightMatch(product.partnumber, searchQuery)}
+                  </div>
+
+                  {/* Description */}
+                  <div className={`flex-1 truncate ${index === highlightedIndex ? 'text-white' : 'text-gray-800'}`}>
+                    {highlightMatch(product.description || '-', searchQuery)}
+                  </div>
+
+                  {/* Category: maincat >> subcat */}
+                  <div className={`w-48 text-right truncate ${index === highlightedIndex ? 'text-blue-200' : 'text-gray-500'}`}>
+                    {product.prdmaincat || product.prdsubcat
+                      ? `${product.prdmaincat || ''}${product.prdmaincat && product.prdsubcat ? ' >> ' : ''}${product.prdsubcat || ''}`
+                      : '-'
+                    }
+                  </div>
+
+                  {/* Price */}
+                  <div className={`w-16 text-right font-semibold ${index === highlightedIndex ? 'text-green-300' : 'text-green-700'}`}>
+                    ${(product.price || 0).toFixed(2)}
+                  </div>
+
+                  {/* Stock */}
+                  <div className={`w-16 text-center font-semibold ${
+                    index === highlightedIndex
+                      ? (product.inventory && product.inventory > 0 ? 'text-green-300' : 'text-red-300')
+                      : (product.inventory && product.inventory > 0 ? 'text-green-600' : 'text-red-500')
+                  }`}>
+                    {product.inventory || 0}
                   </div>
                 </div>
               ))
             )}
+          </div>
+
+          {/* Footer */}
+          <div className="px-2 py-1 bg-gray-100 border-t border-gray-300 flex justify-between text-[10px] text-gray-500">
+            <span>{filteredProducts.length} results</span>
+            <span>↑↓ Navigate | Enter Select | Esc Close</span>
           </div>
         </div>
       )}

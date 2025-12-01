@@ -65,6 +65,22 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Helper function to get the default route for staff users based on their default_panel setting
+  const getStaffDefaultRoute = (defaultPanel: string | undefined): string => {
+    switch (defaultPanel) {
+      case 'accounts':
+        return '/accounts';
+      case 'products':
+        return '/products';
+      case 'invoicing':
+        return '/invoicing';
+      case 'prospects':
+        return '/prospects';
+      default:
+        return '/'; // Default to home if no panel set
+    }
+  };
+
   useEffect(() => {
     // Only navigate if authenticated, user exists, doesn't require password change,
     // and password modal is not showing
@@ -72,8 +88,11 @@ const Login: React.FC = () => {
       // Check if this is admin account 999 - redirect to admin page
       if (String(user.accountNumber) === '999') {
         navigate('/admin');  // Admin dashboard
+      } else if (isStaffUser && user.default_panel) {
+        // Staff users navigate to their configured default panel
+        navigate(getStaffDefaultRoute(user.default_panel));
       } else {
-        navigate('/');  // All other users (regular customers and staff) go to home, which will route them appropriately
+        navigate('/');  // Regular customers go to home
       }
     }
   }, [isAuthenticated, user, navigate, showPasswordChangeModal]);
@@ -127,8 +146,11 @@ const Login: React.FC = () => {
       // Check if admin account 999
       if (user && String(user.accountNumber) === '999') {
         navigate('/admin');  // Admin dashboard
+      } else if (isStaffUser && user?.default_panel) {
+        // Staff users navigate to their configured default panel
+        navigate(getStaffDefaultRoute(user.default_panel));
       } else {
-        navigate('/');  // All other users (regular customers and staff) go to home, which will route them appropriately
+        navigate('/');  // Regular customers go to home
       }
     }
   };

@@ -228,6 +228,9 @@ const ManagerPage: React.FC = () => {
     closeProspectsModal();
   }, [closeProspectsModal]);
 
+  // Permission check: Super users can always edit, others need allow_product_edit flag
+  const canEditProducts = isSuperUser || user?.allow_product_edit !== false;
+
   // Initialize: Set ACTIVE_EDITS to FALSE on component mount
   // This ensures we start clean and recover from any stale locks
   useEffect(() => {
@@ -323,7 +326,9 @@ const ManagerPage: React.FC = () => {
     user_full_name: '',
     security_level: 'user',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    allow_product_edit: staff.allow_product_edit !== false,
+    default_panel: (staff.default_panel || 'accounts') as 'accounts' | 'products' | 'invoicing' | 'prospects'
   });
   const [addStaffLoading, setAddStaffLoading] = useState(false);
   const [addStaffErrors, setAddStaffErrors] = useState<{ [key: string]: string }>({});
@@ -575,7 +580,9 @@ const ManagerPage: React.FC = () => {
       user_full_name: staff.user_full_name,
       security_level: staff.security_level,
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
+    allow_product_edit: staff.allow_product_edit !== false,
+    default_panel: (staff.default_panel || 'accounts') as 'accounts' | 'products' | 'invoicing' | 'prospects'
     });
     setAddStaffErrors({});
     setShowAddStaffModal(true);
@@ -589,7 +596,9 @@ const ManagerPage: React.FC = () => {
       user_full_name: '',
       security_level: 'user',
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
+    allow_product_edit: true,
+    default_panel: 'accounts' as 'accounts' | 'products' | 'invoicing' | 'prospects'
     });
     setAddStaffErrors({});
     setShowAddStaffModal(true);
@@ -604,7 +613,9 @@ const ManagerPage: React.FC = () => {
       user_full_name: '',
       security_level: 'user',
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
+    allow_product_edit: true,
+    default_panel: 'accounts' as 'accounts' | 'products' | 'invoicing' | 'prospects'
     });
     setAddStaffErrors({});
   };
@@ -668,6 +679,8 @@ const ManagerPage: React.FC = () => {
         const updateData: any = {
           user_full_name: newStaffData.user_full_name,
           security_level: newStaffData.security_level,
+          allow_product_edit: newStaffData.allow_product_edit,
+          default_panel: newStaffData.default_panel,
         };
 
         // Only update password if a new one is provided
@@ -706,6 +719,8 @@ const ManagerPage: React.FC = () => {
           user_full_name: newStaffData.user_full_name,
           security_level: newStaffData.security_level,
           password_hash: hashedPassword,
+          allow_product_edit: newStaffData.allow_product_edit,
+          default_panel: newStaffData.default_panel,
           settings: {}
         };
 
@@ -2369,13 +2384,16 @@ const ManagerPage: React.FC = () => {
               )}
               <div className="flex gap-2">
                <button
-                 onClick={() => setEditMode(!editMode)}
+                 onClick={() => canEditProducts && setEditMode(!editMode)}
+                 disabled={!canEditProducts && !editMode}
                  className={`px-4 py-1 rounded text-xs font-medium transition-colors ${
-                   editMode
-                     ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                     : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                   !canEditProducts && !editMode
+                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                     : editMode
+                       ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                       : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                  }`}
-                 title={editMode ? 'Switch to View Mode' : 'Switch to Edit Mode'}
+                 title={!canEditProducts && !editMode ? 'Product editing disabled - contact administrator' : editMode ? 'Switch to View Mode' : 'Switch to Edit Mode'}
                >
                  {editMode ? '✏️ EDIT MODE' : '👁️ VIEW MODE'}
                </button>
@@ -3462,6 +3480,39 @@ const ManagerPage: React.FC = () => {
                     <option value="admin">Admin</option>
                     <option value="super_admin">Super Admin</option>
                   </select>
+                </div>
+                {/* Default Panel Field */}
+                <div>
+                  <label htmlFor="defaultPanel" className="block text-sm font-medium text-gray-700 mb-1">
+                    Default Panel
+                  </label>
+                  <select
+                    id="defaultPanel"
+                    value={newStaffData.default_panel}
+                    onChange={(e) => setNewStaffData(prev => ({ ...prev, default_panel: e.target.value as 'accounts' | 'products' | 'invoicing' | 'prospects' }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="accounts">Accounts</option>
+                    <option value="products">Products</option>
+                    <option value="invoicing">Invoicing</option>
+                    <option value="prospects">Prospects</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">The panel this user opens to when logging in</p>
+                </div>
+
+                {/* Allow Product Edit Field */}
+                <div className="flex items-center">
+                  <input
+                    id="allowProductEdit"
+                    type="checkbox"
+                    checked={newStaffData.allow_product_edit}
+                    onChange={(e) => setNewStaffData(prev => ({ ...prev, allow_product_edit: e.target.checked }))}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="allowProductEdit" className="ml-2 block text-sm text-gray-700">
+                    Allow Product Edit
+                  </label>
+                  <span className="ml-2 text-xs text-gray-500">(Super Admins always have edit access)</span>
                 </div>
 
                 {/* Password Field */}

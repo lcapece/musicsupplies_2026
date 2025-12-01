@@ -57,6 +57,8 @@ export interface User {
   marketing_sms_consent?: boolean; // Tracks express written consent for marketing SMS messages
   is_special_admin?: boolean; // Flag for special admin account (99)
   security_level?: string; // Security level for staff users (e.g., 'superuser', 'manager', 'staff')
+  allow_product_edit?: boolean; // Staff permission to edit products
+  default_panel?: 'accounts' | 'products' | 'invoicing' | 'prospects'; // Default panel for staff users
 }
 
 export interface ProductGroup {
@@ -262,6 +264,8 @@ export interface InvoiceHeader {
   st_zip?: string;
   st_contact?: string;
   st_phone?: string;
+  st_mobile?: string;
+  st_email?: string;
   // Notes
   notes?: string;
   gen_comments?: string;
@@ -313,7 +317,10 @@ export interface StaffMember {
   security_level: string;
   is_salesperson: boolean;
   bridge_code?: string;
+  allow_product_edit?: boolean;
+  default_panel?: 'accounts' | 'products' | 'invoicing' | 'prospects';
 }
+export type DefaultPanelType = 'accounts' | 'products' | 'invoicing' | 'prospects';
 
 export interface InvoiceHeaderWithAccount extends InvoiceHeader {
   account?: AccountLookup;

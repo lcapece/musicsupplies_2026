@@ -1,4 +1,4 @@
-// Music Supplies App - Version 824.848p - Account 99 Admin Backend
+// Music Supplies App - Version 1201.08.51 - Account 99 Admin Backend
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -53,6 +53,8 @@ import ProspectsSearchModal from './components/ProspectsSearchModal';
 import { StaffPasswordChangeModal } from './components/StaffPasswordChangeModal';
 import PurchaseOrderModal from './components/PurchaseOrderModal';
 import SecurityBridgeModal from './components/SecurityBridgeModal';
+import SuperUserChoiceModal from './components/SuperUserChoiceModal';
+import ShopOnBehalfModal from './components/ShopOnBehalfModal';
 import { useCart } from './context/CartContext';
 
 
@@ -152,7 +154,15 @@ function AppContent() {
     isStaffUser,
     showSecurityBridge,
     handleSecurityBridgeSuccess,
-    handleSecurityBridgeFailure
+    handleSecurityBridgeFailure,
+    // Shop on behalf of customer
+    showSuperUserChoiceModal,
+    closeSuperUserChoiceModal,
+    handleChooseBackend,
+    handleChooseShopOnBehalf,
+    showShopOnBehalfModal,
+    closeShopOnBehalfModal,
+    handleSelectShopOnBehalfCustomer
   } = useAuth();
   
   const { 
@@ -541,6 +551,22 @@ function AppContent() {
         onSuccess={handleSecurityBridgeSuccess}
         onFailure={handleSecurityBridgeFailure}
         username={staffUsername || 'PETER'}
+      />
+
+      {/* Super User Choice Modal - Backend vs Shop on Behalf */}
+      <SuperUserChoiceModal
+        isOpen={showSuperUserChoiceModal}
+        onClose={closeSuperUserChoiceModal}
+        onChooseBackend={handleChooseBackend}
+        onChooseShopOnBehalf={handleChooseShopOnBehalf}
+        staffUsername={staffUsername || 'User'}
+      />
+
+      {/* Shop on Behalf Modal - Customer selection */}
+      <ShopOnBehalfModal
+        isOpen={showShopOnBehalfModal}
+        onClose={closeShopOnBehalfModal}
+        onSelectCustomer={handleSelectShopOnBehalfCustomer}
       />
 
     </>
