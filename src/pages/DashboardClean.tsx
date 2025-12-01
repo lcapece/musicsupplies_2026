@@ -692,17 +692,6 @@ const DashboardClean: React.FC = () => {
         onClose={() => setShowPromoCodePopup(false)}
       />
 
-      {/* Past Due Invoices Modal */}
-      {user?.accountNumber && (
-        <PastDueInvoicesModal
-          isOpen={showPastDueModal}
-          onClose={() => setShowPastDueModal(false)}
-          accountNumber={parseInt(user.accountNumber, 10)}
-          onPaymentComplete={() => {
-            // Optionally refresh data after payment
-          }}
-        />
-      )}
     </div>
   );
 };
