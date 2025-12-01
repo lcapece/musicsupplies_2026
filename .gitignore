@@ -196,3 +196,12 @@ run_*.html
 add_*.html
 *-migration.html
 *_migration.html
+
+# ======================
+# AI/MCP Config Files (SENSITIVE - contain API keys)
+# ======================
+.mcp.json
+mcp.json
+.kilocode/
+claude_desktop_config*.json
+2025-*-this-session-*.txt
