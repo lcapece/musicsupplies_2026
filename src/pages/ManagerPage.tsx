@@ -327,8 +327,8 @@ const ManagerPage: React.FC = () => {
     security_level: 'user',
     password: '',
     confirmPassword: '',
-    allow_product_edit: staff.allow_product_edit !== false,
-    default_panel: (staff.default_panel || 'accounts') as 'accounts' | 'products' | 'invoicing' | 'prospects'
+    allow_product_edit: true,
+    default_panel: 'accounts' as 'accounts' | 'products' | 'invoicing' | 'prospects'
   });
   const [addStaffLoading, setAddStaffLoading] = useState(false);
   const [addStaffErrors, setAddStaffErrors] = useState<{ [key: string]: string }>({});

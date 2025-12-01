@@ -1,4 +1,4 @@
-// Music Supplies App - Version 1201.08.51 - Account 99 Admin Backend
+// Music Supplies App - Version 12.01.120 - Account 99 Admin Backend
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -56,6 +56,7 @@ import SecurityBridgeModal from './components/SecurityBridgeModal';
 import SuperUserChoiceModal from './components/SuperUserChoiceModal';
 import ShopOnBehalfModal from './components/ShopOnBehalfModal';
 import { useCart } from './context/CartContext';
+import LouCapecePlayer from './components/LouCapecePlayer';
 
 
 interface ProtectedRouteProps {
@@ -174,6 +175,9 @@ function AppContent() {
   
   // For error handling
   const [dbUpdateError, setDbUpdateError] = useState<boolean>(false);
+
+  // Lou Capece Music Player
+  const [showMusicPlayer, setShowMusicPlayer] = useState<boolean>(false);
 
   // Check database updates when the app loads
   useEffect(() => {
@@ -569,6 +573,29 @@ function AppContent() {
         onSelectCustomer={handleSelectShopOnBehalfCustomer}
       />
 
+      {/* Lou Capece Music Player */}
+      <LouCapecePlayer
+        isOpen={showMusicPlayer}
+        onClose={() => setShowMusicPlayer(false)}
+      />
+
+      {/* Floating Music Button - Click here to listen to Lou Capece */}
+      {!showMusicPlayer && (
+        <button
+          onClick={() => setShowMusicPlayer(true)}
+          className="fixed bottom-4 right-4 bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-600 hover:to-amber-700 text-white px-4 py-3 rounded-2xl shadow-lg z-40 flex items-center gap-3 transition-all duration-300 hover:scale-105"
+          title="Listen to Lou Capece - Jazz Guitar Classics"
+        >
+          <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+          </svg>
+          <span className="text-xs font-medium text-center leading-tight">
+            Listen to Lou Capece Vols. I &amp; II<br/>
+            Solo Jazz Guitar Classics
+          </span>
+        </button>
+      )}
+
     </>
   );
 }
@@ -645,8 +672,7 @@ function App() {
           <CartProvider>
             <NotificationProvider>
               <AppContentWithStatusCheck bypassCheck={bypassCheck} />
-              {/* Enhanced Chat Widget - Available to all users, no login required */}
-              {window.location.pathname !== '/chat' && <EnhancedChatWidget />}
+              {/* Enhanced Chat Widget - REMOVED - Replaced with Lou Capece Music Player */}
             </NotificationProvider>
           </CartProvider>
         </AuthProvider>
