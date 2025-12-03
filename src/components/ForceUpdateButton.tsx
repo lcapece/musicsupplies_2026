@@ -85,9 +85,9 @@ const ForceUpdateButton: React.FC<ForceUpdateButtonProps> = ({
     <div className={`flex flex-col items-center space-y-2 ${className}`}>
       {showVersionInfo && (
         <div className="text-xs text-gray-500 text-center">
-          <div>Current: {currentVersion}</div>
+          <div>Current: {currentVersion.startsWith('RC') ? currentVersion : `v${currentVersion}`}</div>
           {latestVersion && latestVersion !== currentVersion && (
-            <div className="text-blue-600 font-medium">Latest: {latestVersion}</div>
+            <div className="text-blue-600 font-medium">Latest: {latestVersion.startsWith('RC') ? latestVersion : `v${latestVersion}`}</div>
           )}
         </div>
       )}

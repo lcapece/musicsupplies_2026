@@ -2032,18 +2032,22 @@ const CategorySalesTab: React.FC<{ account: Account }> = ({ account }) => {
 // ============================================
 // CALL HISTORY TAB COMPONENT (3CX Phone System Integration)
 // ============================================
+type CallSortColumn = 'direction' | 'call_time' | 'contact_name' | 'employee_name' | 'talking_seconds' | 'status';
+type SortDirection = 'asc' | 'desc';
+
 const CallHistoryTab: React.FC<{ accountNumber: number; staffUsername: string }> = ({ accountNumber, staffUsername }) => {
   const [calls, setCalls] = useState<CallHistoryRecord[]>([]);
   const [stats, setStats] = useState<CallStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'Inbound' | 'Outbound'>('all');
   const [selectedCall, setSelectedCall] = useState<CallHistoryRecord | null>(null);
   const [notes, setNotes] = useState<CallNote[]>([]);
   const [newNote, setNewNote] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const LIMIT = 25;
+  const [sortColumn, setSortColumn] = useState<CallSortColumn>('call_time');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const LIMIT = 50;
 
   const loadCallHistory = useCallback(async (reset = false) => {
     if (reset) {
@@ -2056,7 +2060,7 @@ const CallHistoryTab: React.FC<{ accountNumber: number; staffUsername: string }>
         p_account_number: accountNumber,
         p_limit: LIMIT,
         p_offset: currentOffset,
-        p_direction: filter === 'all' ? null : filter
+        p_direction: null // Always load all calls
       });
 
       if (error) throw error;
@@ -2080,7 +2084,7 @@ const CallHistoryTab: React.FC<{ accountNumber: number; staffUsername: string }>
     } finally {
       setLoading(false);
     }
-  }, [accountNumber, filter, offset]);
+  }, [accountNumber, offset]);
 
   const loadStats = useCallback(async () => {
     try {
@@ -2114,7 +2118,7 @@ const CallHistoryTab: React.FC<{ accountNumber: number; staffUsername: string }>
   useEffect(() => {
     loadCallHistory(true);
     loadStats();
-  }, [accountNumber, filter]);
+  }, [accountNumber]);
 
   useEffect(() => {
     if (selectedCall) {
@@ -2176,6 +2180,57 @@ const CallHistoryTab: React.FC<{ accountNumber: number; staffUsername: string }>
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  // Sort handler
+  const handleSort = (column: CallSortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  // Sort calls
+  const sortedCalls = [...calls].sort((a, b) => {
+    let comparison = 0;
+    switch (sortColumn) {
+      case 'direction':
+        comparison = a.direction.localeCompare(b.direction);
+        break;
+      case 'call_time':
+        comparison = new Date(a.call_time).getTime() - new Date(b.call_time).getTime();
+        break;
+      case 'contact_name':
+        comparison = (a.contact_name || a.phone_number).localeCompare(b.contact_name || b.phone_number);
+        break;
+      case 'employee_name':
+        comparison = a.employee_name.localeCompare(b.employee_name);
+        break;
+      case 'talking_seconds':
+        comparison = a.talking_seconds - b.talking_seconds;
+        break;
+      case 'status':
+        comparison = a.status.localeCompare(b.status);
+        break;
+    }
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+
+  // Sort indicator component
+  const SortIndicator: React.FC<{ column: CallSortColumn }> = ({ column }) => (
+    <span className="ml-1 inline-flex">
+      {sortColumn === column ? (
+        sortDirection === 'asc' ? (
+          <ArrowUp className="w-3 h-3" />
+        ) : (
+          <ArrowDown className="w-3 h-3" />
+        )
+      ) : (
+        <span className="w-3 h-3 opacity-30">-</span>
+      )}
+    </span>
+  );
+
   if (loading && calls.length === 0) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -2186,56 +2241,27 @@ const CallHistoryTab: React.FC<{ accountNumber: number; staffUsername: string }>
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-gray-50">
-      {/* Stats Summary */}
+      {/* Stats Summary - Compact */}
       {stats && stats.total_calls > 0 && (
-        <div className="flex-shrink-0 px-4 py-3 bg-white border-b border-gray-200">
-          <div className="grid grid-cols-4 gap-3">
-            <div className="text-center">
-              <div className="text-lg font-bold text-gray-900">{stats.total_calls}</div>
-              <div className="text-[10px] text-gray-500 uppercase tracking-wide">Total Calls</div>
+        <div className="flex-shrink-0 px-3 py-2 bg-white border-b border-gray-200">
+          <div className="flex items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-4">
+              <span><strong>{stats.total_calls}</strong> Total</span>
+              <span className="text-blue-600"><strong>{stats.inbound_calls}</strong> In</span>
+              <span className="text-green-600"><strong>{stats.outbound_calls}</strong> Out</span>
+              <span><strong>{stats.total_talk_minutes || 0}</strong> mins</span>
             </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-emerald-600">{stats.inbound_calls}</div>
-              <div className="text-[10px] text-gray-500 uppercase tracking-wide">Inbound</div>
+            <div className="flex items-center gap-3 text-gray-500">
+              <span>Last in: {formatRelativeTime(stats.last_inbound_call)}</span>
+              <span>Last out: {formatRelativeTime(stats.last_outbound_call)}</span>
             </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-blue-600">{stats.outbound_calls}</div>
-              <div className="text-[10px] text-gray-500 uppercase tracking-wide">Outbound</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-gray-900">{stats.total_talk_minutes || 0}</div>
-              <div className="text-[10px] text-gray-500 uppercase tracking-wide">Talk Mins</div>
-            </div>
-          </div>
-          <div className="flex justify-between mt-2 text-xs text-gray-500">
-            <span>Last inbound: {formatRelativeTime(stats.last_inbound_call)}</span>
-            <span>Last outbound: {formatRelativeTime(stats.last_outbound_call)}</span>
           </div>
         </div>
       )}
 
-      {/* Filter Tabs */}
-      <div className="flex-shrink-0 px-4 py-2 bg-white border-b border-gray-200">
-        <div className="flex gap-2">
-          {(['all', 'Inbound', 'Outbound'] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                filter === f
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {f === 'all' ? 'All Calls' : f}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Call List + Detail Split */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Call List */}
+        {/* Call Table */}
         <div className={`${selectedCall ? 'w-1/2' : 'w-full'} overflow-y-auto border-r border-gray-200`}>
           {calls.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-8">
@@ -2248,80 +2274,152 @@ const CallHistoryTab: React.FC<{ accountNumber: number; staffUsername: string }>
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {calls.map((call) => (
-                <div
-                  key={call.id}
-                  onClick={() => setSelectedCall(call)}
-                  className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                    selectedCall?.id === call.id ? 'bg-indigo-50 border-l-2 border-indigo-600' : ''
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    {/* Direction Icon */}
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      call.direction === 'Inbound'
-                        ? call.status === 'Answered' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
-                        : 'bg-blue-100 text-blue-600'
-                    }`}>
-                      {call.direction === 'Inbound' ? (
-                        call.status === 'Answered' ? <PhoneCall className="w-4 h-4" /> : <PhoneOff className="w-4 h-4" />
-                      ) : (
-                        <Phone className="w-4 h-4" />
-                      )}
-                    </div>
-
-                    {/* Call Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm text-gray-900 truncate">
-                          {call.contact_name || call.phone_number}
-                        </span>
-                        {call.has_notes && (
-                          <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-medium rounded">
-                            {call.note_count} note{call.note_count !== 1 ? 's' : ''}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
-                        <span>{formatCallTime(call.call_time)}</span>
-                        <span>·</span>
-                        <span>{call.employee_name}</span>
-                        {call.talking_seconds > 0 && (
-                          <>
-                            <span>·</span>
-                            <span className="font-medium text-gray-700">{formatDuration(call.talking_seconds)}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Status Badge */}
-                    <div className={`px-2 py-0.5 text-[10px] font-medium rounded ${
-                      call.status === 'Answered'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {call.status}
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {/* Load More */}
-              {hasMore && (
-                <div className="p-4 text-center">
-                  <button
-                    onClick={() => {
-                      setOffset(prev => prev + LIMIT);
-                      loadCallHistory(false);
-                    }}
-                    className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+            <table className="min-w-full">
+              <thead className="bg-gray-100 sticky top-0 z-10">
+                <tr>
+                  <th
+                    onClick={() => handleSort('direction')}
+                    className="px-2 py-2 text-left text-[10px] font-semibold text-gray-600 uppercase tracking-wide cursor-pointer hover:bg-gray-200 w-12"
+                    title="Sort by Direction"
                   >
-                    Load more calls...
-                  </button>
-                </div>
-              )}
+                    <div className="flex items-center">
+                      Dir
+                      <SortIndicator column="direction" />
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort('call_time')}
+                    className="px-2 py-2 text-left text-[10px] font-semibold text-gray-600 uppercase tracking-wide cursor-pointer hover:bg-gray-200"
+                    title="Sort by Date/Time"
+                  >
+                    <div className="flex items-center">
+                      Date/Time
+                      <SortIndicator column="call_time" />
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort('contact_name')}
+                    className="px-2 py-2 text-left text-[10px] font-semibold text-gray-600 uppercase tracking-wide cursor-pointer hover:bg-gray-200"
+                    title="Sort by Contact"
+                  >
+                    <div className="flex items-center">
+                      Contact
+                      <SortIndicator column="contact_name" />
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort('employee_name')}
+                    className="px-2 py-2 text-left text-[10px] font-semibold text-gray-600 uppercase tracking-wide cursor-pointer hover:bg-gray-200"
+                    title="Sort by Employee"
+                  >
+                    <div className="flex items-center">
+                      Employee
+                      <SortIndicator column="employee_name" />
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort('talking_seconds')}
+                    className="px-2 py-2 text-left text-[10px] font-semibold text-gray-600 uppercase tracking-wide cursor-pointer hover:bg-gray-200 w-16"
+                    title="Sort by Duration"
+                  >
+                    <div className="flex items-center">
+                      Dur
+                      <SortIndicator column="talking_seconds" />
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort('status')}
+                    className="px-2 py-2 text-left text-[10px] font-semibold text-gray-600 uppercase tracking-wide cursor-pointer hover:bg-gray-200 w-20"
+                    title="Sort by Status"
+                  >
+                    <div className="flex items-center">
+                      Status
+                      <SortIndicator column="status" />
+                    </div>
+                  </th>
+                  <th className="px-2 py-2 text-left text-[10px] font-semibold text-gray-600 uppercase tracking-wide w-12">
+                    Notes
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-100">
+                {sortedCalls.map((call) => (
+                  <tr
+                    key={call.id}
+                    onClick={() => setSelectedCall(call)}
+                    className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+                      selectedCall?.id === call.id ? 'bg-indigo-50' : ''
+                    }`}
+                  >
+                    {/* Direction indicator with arrow */}
+                    <td className="px-2 py-1.5 whitespace-nowrap">
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                          call.direction === 'Inbound'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-green-500 text-white'
+                        }`}
+                        title={call.direction}
+                      >
+                        {call.direction === 'Inbound' ? (
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        ) : (
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        )}
+                      </div>
+                    </td>
+                    {/* Date/Time */}
+                    <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-700">
+                      {formatCallTime(call.call_time)}
+                    </td>
+                    {/* Contact */}
+                    <td className="px-2 py-1.5 text-xs text-gray-900 truncate max-w-[140px]">
+                      {call.contact_name || call.phone_number}
+                    </td>
+                    {/* Employee */}
+                    <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-600 truncate max-w-[100px]">
+                      {call.employee_name}
+                    </td>
+                    {/* Duration */}
+                    <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-700 font-medium">
+                      {call.talking_seconds > 0 ? formatDuration(call.talking_seconds) : '-'}
+                    </td>
+                    {/* Status */}
+                    <td className="px-2 py-1.5 whitespace-nowrap">
+                      <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${
+                        call.status === 'Answered'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {call.status}
+                      </span>
+                    </td>
+                    {/* Notes indicator */}
+                    <td className="px-2 py-1.5 whitespace-nowrap text-xs">
+                      {call.has_notes && (
+                        <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-medium rounded">
+                          {call.note_count}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {/* Load More */}
+          {hasMore && calls.length > 0 && (
+            <div className="p-3 text-center bg-white border-t border-gray-100">
+              <button
+                onClick={() => {
+                  setOffset(prev => prev + LIMIT);
+                  loadCallHistory(false);
+                }}
+                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+              >
+                Load more calls...
+              </button>
             </div>
           )}
         </div>
@@ -2351,7 +2449,7 @@ const CallHistoryTab: React.FC<{ accountNumber: number; staffUsername: string }>
                 <div>
                   <span className="text-gray-500">Direction:</span>
                   <span className={`ml-2 font-medium ${
-                    selectedCall.direction === 'Inbound' ? 'text-emerald-600' : 'text-blue-600'
+                    selectedCall.direction === 'Inbound' ? 'text-blue-600' : 'text-green-600'
                   }`}>{selectedCall.direction}</span>
                 </div>
                 <div>

@@ -96,7 +96,7 @@ export const VersionCheck: React.FC = () => {
           fontFamily: 'monospace'
         }}
       >
-        v{CURRENT_VERSION}
+        {CURRENT_VERSION.startsWith('RC') ? CURRENT_VERSION : `v${CURRENT_VERSION}`}
       </div>
     </>
   );
