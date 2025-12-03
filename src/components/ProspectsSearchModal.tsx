@@ -143,13 +143,16 @@ const ProspectsSearchModal: React.FC<ProspectsSearchModalProps> = ({
   };
 
   // Function to fetch user's assigned states
-  const fetchUserAssignedStates = async () => {
+  // RETURNS the computed super admin status to avoid React state race condition
+  const fetchUserAssignedStates = async (): Promise<boolean> => {
     if (!staffUsername) {
       console.warn('⚠️ No staffUsername provided, cannot fetch states');
-      return;
+      return false;
     }
 
     setIsLoadingStates(true);
+    let computedIsSuperAdmin = false;
+
     try {
       // Check if user is super admin first
       const { data: isAdmin, error: adminError } = await supabase.rpc('is_user_super_admin', {
@@ -160,11 +163,11 @@ const ProspectsSearchModal: React.FC<ProspectsSearchModalProps> = ({
       if (adminError) {
         console.error('❌ Error checking admin status:', adminError);
         // Fallback: check using context values
-        const fallbackAdmin = isSuperUser || isSpecialAdmin || false;
-        setIsSuperAdmin(fallbackAdmin);
+        computedIsSuperAdmin = isSuperUser || isSpecialAdmin || false;
+        setIsSuperAdmin(computedIsSuperAdmin);
       } else {
-        const finalAdmin = isAdmin || isSuperUser || isSpecialAdmin || false;
-        setIsSuperAdmin(finalAdmin);
+        computedIsSuperAdmin = isAdmin || isSuperUser || isSpecialAdmin || false;
+        setIsSuperAdmin(computedIsSuperAdmin);
       }
 
       // If super admin, get ALL states (no restrictions), otherwise get assigned states only
@@ -238,6 +241,9 @@ const ProspectsSearchModal: React.FC<ProspectsSearchModalProps> = ({
     } finally {
       setIsLoadingStates(false);
     }
+
+    // CRITICAL: Return the computed admin status to avoid React state race condition
+    return computedIsSuperAdmin;
   };
 
   // Phone number formatter (kept for potential future data)
@@ -276,7 +282,6 @@ const ProspectsSearchModal: React.FC<ProspectsSearchModalProps> = ({
   // Apply filters and sort results
   const applyFiltersAndSort = (data: EntityResult[]) => {
     let filtered = [...data];
-d
 
     // NO NEED FOR STATE FILTERING - database already did it via JOIN!
     // Data comes pre-filtered based on user's assigned states
@@ -341,8 +346,10 @@ d
   useEffect(() => {
     if (isOpen && staffUsername) {
       // CRITICAL: Fetch states first to determine isSuperAdmin, THEN load data
-      fetchUserAssignedStates().then(() => {
-        loadAllData();
+      // Pass the returned admin status to loadAllData to avoid React state race condition
+      fetchUserAssignedStates().then((confirmedSuperAdmin) => {
+        console.log('🔑 fetchUserAssignedStates returned:', confirmedSuperAdmin);
+        loadAllData(confirmedSuperAdmin);
       });
     } else {
     }
@@ -357,9 +364,15 @@ d
     }
   }, [andContains1, andContains2, andDoesNotContain, stateFilter, sortColumn, sortAsc, assignedStates, isSuperAdmin, allProspects]);
 
-  const loadAllData = async () => {
+  // CRITICAL: Accept confirmedSuperAdmin parameter to avoid React state race condition
+  // The isSuperAdmin state may not be updated yet when this function is called
+  const loadAllData = async (confirmedSuperAdmin?: boolean) => {
     setLoading(true);
     setError(null);
+
+    // Use the passed parameter OR fall back to state/context values
+    const effectiveSuperAdmin = confirmedSuperAdmin ?? isSuperAdmin ?? isSuperUser ?? isSpecialAdmin ?? false;
+    console.log('🔍 loadAllData - confirmedSuperAdmin:', confirmedSuperAdmin, 'effectiveSuperAdmin:', effectiveSuperAdmin);
 
     try {
       // States are loaded via useEffect - no need to check here
@@ -376,7 +389,6 @@ d
       if (cachedData && cacheTimestamp && !isLimitedCache) {
         const age = Date.now() - parseInt(cacheTimestamp);
         if (age < CACHE_DURATION) {
-d
           const formattedProspects = JSON.parse(cachedData) as EntityResult[];
           setAllProspects(formattedProspects);
           setFilteredProspects(formattedProspects);
@@ -390,11 +402,11 @@ d
           const cachedRawData = localStorage.getItem(CACHE_KEY + '_raw');
           if (cachedRawData) {
             const rawProspects = JSON.parse(cachedRawData);
-            calculateCriticalStats(rawProspects, assignedStates, isSuperAdmin);
+            calculateCriticalStats(rawProspects, assignedStates, effectiveSuperAdmin);
 
             // Calculate screenshot count filtered by assigned states
             let screenshotCount = 0;
-            if (isSuperAdmin) {
+            if (effectiveSuperAdmin) {
               screenshotCount = rawProspects.filter((p: any) => p.homepage_screenshot_url && p.homepage_screenshot_url.trim() !== '').length;
             } else {
               const allowedStates = assignedStates.map(s => s.state_abbr.toUpperCase());
@@ -413,20 +425,16 @@ d
         }
       }
 
-d
-
       // SIMPLE FIX: Use database-level filtering with JOIN
       // Super admins get ALL prospects, regular users get ONLY their assigned states
       let prospectsData: any[];
       let prospectsError: any;
 
-      // CRITICAL: Check both state AND context for super admin status
-      // This handles race condition where state might not be updated yet
-      const isUserSuperAdmin = isSuperAdmin || isSuperUser || isSpecialAdmin;
+      // CRITICAL: Use the effective super admin status (from parameter, not potentially stale state)
+      const isUserSuperAdmin = effectiveSuperAdmin;
 
       if (isUserSuperAdmin) {
         // Super admin: fetch ALL prospects
-d
         const result = await supabase
           .from('prospector')
           .select('*')
@@ -437,7 +445,6 @@ d
         prospectsError = result.error;
       } else {
         // Regular user: use database JOIN to get ONLY assigned state prospects
-d
         const result = await supabase.rpc('get_prospects_for_user', {
           p_username: staffUsername
         });
@@ -453,8 +460,6 @@ d
         console.error('❌ Error code:', prospectsError.code);
         throw prospectsError;
       }
-
-d
 
       // Calculate stats from filtered data (excluding 0000000000 phone numbers)
       const validPhoneCount = (prospectsData || []).filter(p =>
@@ -517,8 +522,6 @@ d
             recent_activity_date: recentActivityDate
           } as EntityResult;
         });
-
-d
 
       // SECURITY FIX: Calculate critical stats filtered by assigned states
       const criticalStats = calculateCriticalStats(prospectsData || [], assignedStates, isUserSuperAdmin);

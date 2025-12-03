@@ -67,8 +67,8 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, activeView }) => {
     <header className="bg-white shadow-sm border-b">
       <div className="max-w-full mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Left Section - Logo */}
-          <div className="flex items-center">
+          {/* Left Section - Logo and Backend Button for Staff */}
+          <div className="flex items-center space-x-4">
             <Link to="/" className="flex items-center">
               <div className="font-bold header-logo leading-none whitespace-nowrap">
                 <span className="text-blue-600">Music</span>
@@ -76,6 +76,16 @@ const Header: React.FC<HeaderProps> = ({ onViewChange, activeView }) => {
                 <span className="text-black">.com</span>
               </div>
             </Link>
+
+            {/* Backend Button - Only visible for staff/manager users */}
+            {isStaffUser && (
+              <button
+                onClick={() => navigate('/crm')}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+              >
+                &laquo; Backend
+              </button>
+            )}
           </div>
 
           {/* Center Section - Navigation */}
