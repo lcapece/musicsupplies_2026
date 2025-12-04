@@ -81,6 +81,49 @@ const LouCapecePlayer: React.FC<LouCapecePlayerProps> = ({ isOpen, onClose }) =>
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // Dragging state for expanded player
+  const [position, setPosition] = useState({ x: 100, y: 100 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const playerRef = useRef<HTMLDivElement>(null);
+
+  // Handle mouse down on drag handle
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (playerRef.current) {
+      setIsDragging(true);
+      setDragOffset({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      });
+    }
+  };
+
+  // Handle mouse move for dragging
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
+
   const tracks = selectedVolume === 1 ? volume1Tracks : volume2Tracks;
   const currentTrack = tracks[currentTrackIndex];
   const basePath = selectedVolume === 1 ? '/media/Lou Capece Vol. 1/' : '/media/Lou Capece Vol. 2/';
@@ -166,102 +209,63 @@ const LouCapecePlayer: React.FC<LouCapecePlayerProps> = ({ isOpen, onClose }) =>
 
   if (!isOpen) return null;
 
-  // Minimized view - fixed at bottom of screen
+  // Minimized view - compact single row, ~50px height, bottom right 25% width
   if (isMinimized) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 text-white shadow-2xl z-50 border-t-2 border-amber-600">
-        <div className="max-w-7xl mx-auto px-4 py-2">
-          <div className="flex items-center justify-between gap-4">
-            {/* Track info */}
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 bg-amber-700 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-                </svg>
-              </div>
-              <div className="min-w-0">
-                <div className="text-sm font-medium truncate">{currentTrack.title}</div>
-                <div className="text-xs text-amber-200">Lou Capece - Vol. {selectedVolume}</div>
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="flex items-center gap-2">
-              <button onClick={playPrevious} className="p-2 hover:bg-amber-700 rounded-full transition-colors">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
-                </svg>
-              </button>
-              <button onClick={togglePlay} className="p-2 bg-amber-600 hover:bg-amber-500 rounded-full transition-colors">
-                {isPlaying ? (
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-                  </svg>
-                ) : (
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                )}
-              </button>
-              <button onClick={playNext} className="p-2 hover:bg-amber-700 rounded-full transition-colors">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
-                </svg>
-              </button>
-            </div>
-
-            {/* Progress bar */}
-            <div className="flex-1 hidden sm:flex items-center gap-2 max-w-md">
-              <span className="text-xs text-amber-200 w-10">{formatTime(currentTime)}</span>
-              <input
-                type="range"
-                min="0"
-                max={duration || 100}
-                value={currentTime}
-                onChange={handleSeek}
-                className="flex-1 h-1 bg-amber-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
-              />
-              <span className="text-xs text-amber-200 w-10">{formatTime(duration)}</span>
-            </div>
-
-            {/* Volume */}
-            <div className="hidden md:flex items-center gap-2">
+      <div className="fixed bottom-0 right-0 w-1/4 min-w-[320px] h-[50px] bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 text-white shadow-2xl z-50 border-t border-l border-amber-600 rounded-tl-lg">
+        <div className="h-full px-2 flex items-center gap-2">
+          {/* Play/Pause - compact */}
+          <button onClick={togglePlay} className="p-1.5 bg-amber-600 hover:bg-amber-500 rounded-full transition-colors flex-shrink-0">
+            {isPlaying ? (
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
               </svg>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={volume}
-                onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-20 h-1 bg-amber-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
-              />
-            </div>
+            ) : (
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            )}
+          </button>
 
-            {/* Expand/Close buttons */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setIsMinimized(false)}
-                className="p-2 hover:bg-amber-700 rounded-full transition-colors"
-                title="Expand player"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7"/>
-                </svg>
-              </button>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-red-600 rounded-full transition-colors"
-                title="Close player"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-              </button>
-            </div>
+          {/* Prev/Next */}
+          <button onClick={playPrevious} className="p-1 hover:bg-amber-700 rounded transition-colors flex-shrink-0">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+            </svg>
+          </button>
+          <button onClick={playNext} className="p-1 hover:bg-amber-700 rounded transition-colors flex-shrink-0">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+            </svg>
+          </button>
+
+          {/* Track info */}
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-medium truncate">{currentTrack.title}</div>
+            <div className="text-[9px] text-amber-300">{formatTime(currentTime)} / {formatTime(duration)}</div>
           </div>
+
+          {/* Expand button */}
+          <button
+            onClick={() => setIsMinimized(false)}
+            className="p-1 hover:bg-amber-700 rounded transition-colors flex-shrink-0"
+            title="Expand"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7"/>
+            </svg>
+          </button>
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-red-600 rounded transition-colors flex-shrink-0"
+            title="Close"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
         </div>
         <audio
           ref={audioRef}
@@ -274,159 +278,171 @@ const LouCapecePlayer: React.FC<LouCapecePlayerProps> = ({ isOpen, onClose }) =>
     );
   }
 
-  // Full expanded view - modal overlay
+  // Full expanded view - draggable, no blocking overlay
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 text-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-amber-700 flex items-center justify-between">
+    <div
+      ref={playerRef}
+      className="fixed z-50 bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 text-white rounded-lg shadow-2xl max-w-xs w-80 max-h-[70vh] overflow-hidden"
+      style={{ left: position.x, top: position.y }}
+    >
+      {/* Drag handle / Header */}
+      <div
+        className="px-3 py-2 border-b border-amber-700 flex items-center justify-between cursor-move select-none"
+        onMouseDown={handleMouseDown}
+      >
+        <div className="flex items-center gap-2">
+          {/* Drag indicator */}
+          <svg className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+          </svg>
           <div>
-            <h2 className="text-2xl font-bold">Lou Capece</h2>
-            <p className="text-amber-200 text-sm">Jazz Guitar Classics</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsMinimized(true)}
-              className="p-2 hover:bg-amber-700 rounded-full transition-colors"
-              title="Minimize player"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
-              </svg>
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-red-600 rounded-full transition-colors"
-              title="Close player"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
+            <h2 className="text-sm font-bold">Lou Capece</h2>
+            <p className="text-amber-200 text-[10px]">Jazz Guitar</p>
           </div>
         </div>
-
-        {/* Volume selector */}
-        <div className="px-6 py-3 bg-amber-800/50">
-          <label className="text-sm text-amber-200 mr-3">Select Album:</label>
-          <select
-            value={selectedVolume}
-            onChange={(e) => setSelectedVolume(parseInt(e.target.value) as 1 | 2)}
-            className="bg-amber-700 text-white px-4 py-2 rounded-lg border border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400"
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setIsMinimized(true)}
+            className="p-1 hover:bg-amber-700 rounded-full transition-colors"
+            title="Minimize player"
+            onMouseDown={(e) => e.stopPropagation()}
           >
-            <option value={1}>Volume I - Jazz Guitar Classics</option>
-            <option value={2}>Volume II - Jazz Guitar Classics</option>
-          </select>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-red-600 rounded-full transition-colors"
+            title="Close player"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Volume selector */}
+      <div className="px-3 py-2 bg-amber-800/50">
+        <select
+          value={selectedVolume}
+          onChange={(e) => setSelectedVolume(parseInt(e.target.value) as 1 | 2)}
+          className="w-full bg-amber-700 text-white text-xs px-2 py-1 rounded border border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-400"
+        >
+          <option value={1}>Volume I</option>
+          <option value={2}>Volume II</option>
+        </select>
+      </div>
+
+      {/* Current track display */}
+      <div className="px-3 py-2 bg-amber-800/30">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-amber-700 rounded flex items-center justify-center shadow-lg flex-shrink-0">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold truncate">{currentTrack.title}</div>
+            <div className="text-amber-200 text-xs">Vol. {selectedVolume}</div>
+          </div>
         </div>
 
-        {/* Current track display */}
-        <div className="px-6 py-4 bg-amber-800/30">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-amber-700 rounded-lg flex items-center justify-center shadow-lg">
-              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-              </svg>
-            </div>
-            <div className="flex-1">
-              <div className="text-xl font-semibold">{currentTrack.title}</div>
-              <div className="text-amber-200">Lou Capece - Volume {selectedVolume}</div>
-            </div>
+        {/* Progress bar */}
+        <div className="mt-2">
+          <input
+            type="range"
+            min="0"
+            max={duration || 100}
+            value={currentTime}
+            onChange={handleSeek}
+            className="w-full h-1 bg-amber-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
+          />
+          <div className="flex justify-between text-[10px] text-amber-200 mt-0.5">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
           </div>
+        </div>
 
-          {/* Progress bar */}
-          <div className="mt-4">
-            <input
-              type="range"
-              min="0"
-              max={duration || 100}
-              value={currentTime}
-              onChange={handleSeek}
-              className="w-full h-2 bg-amber-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
-            />
-            <div className="flex justify-between text-xs text-amber-200 mt-1">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="flex items-center justify-center gap-4 mt-4">
-            <button onClick={playPrevious} className="p-3 hover:bg-amber-700 rounded-full transition-colors">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+        {/* Controls */}
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <button onClick={playPrevious} className="p-1.5 hover:bg-amber-700 rounded-full transition-colors">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+            </svg>
+          </button>
+          <button onClick={togglePlay} className="p-2 bg-amber-600 hover:bg-amber-500 rounded-full transition-colors shadow-lg">
+            {isPlaying ? (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
               </svg>
-            </button>
-            <button onClick={togglePlay} className="p-4 bg-amber-600 hover:bg-amber-500 rounded-full transition-colors shadow-lg">
-              {isPlaying ? (
-                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-                </svg>
-              ) : (
-                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            )}
+          </button>
+          <button onClick={playNext} className="p-1.5 hover:bg-amber-700 rounded-full transition-colors">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Volume control */}
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <svg className="w-3 h-3 text-amber-200" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+          </svg>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.1"
+            value={volume}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            className="w-20 h-1 bg-amber-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
+          />
+        </div>
+      </div>
+
+      {/* Track list */}
+      <div className="px-3 py-1 max-h-[150px] overflow-y-auto">
+        <h3 className="text-xs font-semibold text-amber-200 mb-1">Track List</h3>
+        <div className="space-y-0.5">
+          {tracks.map((track, index) => (
+            <button
+              key={index}
+              onClick={() => selectTrack(index)}
+              className={`w-full text-left px-2 py-1 rounded transition-colors flex items-center gap-2 ${
+                index === currentTrackIndex
+                  ? 'bg-amber-600 text-white'
+                  : 'hover:bg-amber-700/50 text-amber-100'
+              }`}
+            >
+              <span className="text-xs text-amber-300 w-5">{index + 1}.</span>
+              <span className="flex-1 truncate text-xs">{track.title}</span>
+              {index === currentTrackIndex && isPlaying && (
+                <span className="flex gap-0.5">
+                  <span className="w-0.5 h-2 bg-white rounded animate-pulse"></span>
+                  <span className="w-0.5 h-3 bg-white rounded animate-pulse" style={{ animationDelay: '0.2s' }}></span>
+                  <span className="w-0.5 h-1.5 bg-white rounded animate-pulse" style={{ animationDelay: '0.4s' }}></span>
+                </span>
               )}
             </button>
-            <button onClick={playNext} className="p-3 hover:bg-amber-700 rounded-full transition-colors">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
-              </svg>
-            </button>
-          </div>
-
-          {/* Volume control */}
-          <div className="flex items-center justify-center gap-3 mt-4">
-            <svg className="w-5 h-5 text-amber-200" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-            </svg>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={volume}
-              onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="w-32 h-2 bg-amber-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
-            />
-          </div>
+          ))}
         </div>
-
-        {/* Track list */}
-        <div className="px-6 py-2 max-h-[300px] overflow-y-auto">
-          <h3 className="text-sm font-semibold text-amber-200 mb-2">Track List</h3>
-          <div className="space-y-1">
-            {tracks.map((track, index) => (
-              <button
-                key={index}
-                onClick={() => selectTrack(index)}
-                className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-3 ${
-                  index === currentTrackIndex
-                    ? 'bg-amber-600 text-white'
-                    : 'hover:bg-amber-700/50 text-amber-100'
-                }`}
-              >
-                <span className="text-sm text-amber-300 w-6">{index + 1}.</span>
-                <span className="flex-1 truncate">{track.title}</span>
-                {index === currentTrackIndex && isPlaying && (
-                  <span className="flex gap-0.5">
-                    <span className="w-1 h-3 bg-white rounded animate-pulse"></span>
-                    <span className="w-1 h-4 bg-white rounded animate-pulse" style={{ animationDelay: '0.2s' }}></span>
-                    <span className="w-1 h-2 bg-white rounded animate-pulse" style={{ animationDelay: '0.4s' }}></span>
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <audio
-          ref={audioRef}
-          src={`${basePath}${encodeURIComponent(currentTrack.file)}`}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onEnded={handleEnded}
-        />
       </div>
+
+      <audio
+        ref={audioRef}
+        src={`${basePath}${encodeURIComponent(currentTrack.file)}`}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+      />
     </div>
   );
 };

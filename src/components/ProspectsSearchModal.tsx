@@ -92,19 +92,20 @@ const ProspectsSearchModal: React.FC<ProspectsSearchModalProps> = ({
   const [contactNotes, setContactNotes] = useState<string>('');
 
   // Fixed column widths - HARDCODED for reliability
+  // CRITICAL: Status must be wide enough for "MADE PURCHASE" (longest option)
   const columnWidths = {
     business_name: 200,
-    status: 150,  // Reduced from 300px to 150px
-    intel: 60,
+    status: 170,  // Wide enough for full status text like "NOT INTERESTED"
+    intel: 50,
     website: 200,
-    state: 60,
-    city: 120,
-    phone: 130,
-    google_review: 100,
+    state: 50,
+    city: 100,
+    phone: 120,
+    google_review: 80,
     email: 200,
-    contact: 130,
-    address: 200,  // Now visible
-    zip: 80        // Now visible
+    contact: 80,
+    address: 150,
+    zip: 60
   };
 
   // Critical stats
@@ -1071,8 +1072,8 @@ const ProspectsSearchModal: React.FC<ProspectsSearchModalProps> = ({
                   <div
                     ref={prospectsScrollRef}
                     onScroll={handleProspectsScroll}
-                    className="flex-1 overflow-auto"
-                    style={{ height: '0', minHeight: '300px', overflowX: 'auto', overflowY: 'auto' }}
+                    className="flex-1"
+                    style={{ overflow: 'auto' }}
                   >
                     {loading ? (
                       <div className="h-full flex items-center justify-center">
@@ -1087,7 +1088,7 @@ const ProspectsSearchModal: React.FC<ProspectsSearchModalProps> = ({
                       </div>
                     ) : displayedProspects.length > 0 ? (
                       <>
-                        <table className="min-w-full border-collapse border border-gray-300" style={{ tableLayout: 'fixed' }}>
+                        <table className="border-collapse border border-gray-300" style={{ tableLayout: 'fixed', width: '1500px' }}>
                           <thead className="sticky top-0 z-20 bg-gray-100">
                             <tr>
                               <th
@@ -1191,15 +1192,16 @@ const ProspectsSearchModal: React.FC<ProspectsSearchModalProps> = ({
                                     </span>
                                   </td>
                                   <td
-                                    className="px-3 py-0.5 border border-gray-300 align-top"
-                                    style={{ width: `${columnWidths.status}px` }}
+                                    className="px-1 py-0.5 border border-gray-300 align-top"
+                                    style={{ width: `${columnWidths.status}px`, minWidth: `${columnWidths.status}px` }}
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     <select
                                       value={prospect.status || ''}
                                       onChange={(e) => handleStatusChange(prospect.website || '', e.target.value)}
                                       disabled={saving}
-                                      className={`w-full px-2 py-1 border border-gray-300 rounded text-xs ${getStatusColor(prospect.status)} font-semibold bg-white cursor-pointer`}
+                                      className={`w-full px-1 py-1 border border-gray-300 rounded text-xs ${getStatusColor(prospect.status)} font-semibold bg-white cursor-pointer`}
+                                      style={{ minWidth: '150px' }}
                                     >
                                       {statusOptions.map((option) => (
                                         <option

@@ -150,6 +150,20 @@ exports.handler = async (event) => {
       };
     }
 
+    // Check minimum order amount ($100)
+    const MIN_ORDER_AMOUNT = 100;
+    if (order_total < MIN_ORDER_AMOUNT) {
+      await pool.close();
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          valid: false,
+          message: `Order total ($${order_total.toFixed(2)}) is below the minimum of $${MIN_ORDER_AMOUNT} required for this promo code`
+        })
+      };
+    }
+
     // Check order amount limit
     if (order_total > promo.max_order_amount) {
       await pool.close();

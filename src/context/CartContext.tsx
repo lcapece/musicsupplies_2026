@@ -123,7 +123,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
           
           if (error) {
-            // RPC function doesn't exist or access denied, skip silently
+            console.error('CartContext: Error saving cart to database:', error.message);
             return;
           }
           
@@ -157,30 +157,29 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
           if (error) {
+            console.error('CartContext: Error loading cart from database:', error.message);
             return;
           }
 
           // Parse the returned data from the database function
+          // The RPC function returns JSONB directly (array of cart items)
           let cartData = null;
           try {
-            // The RPC function returns [{"function_name": actual_cart_data}]
-            if (Array.isArray(rawCartData) && rawCartData.length > 0) {
-              const responseObject = rawCartData[0];
-              // Extract the cart data from the response object
-              if (responseObject && typeof responseObject === 'object') {
-                // Find the property that contains the cart data (could be get_user_cart, etc.)
-                const keys = Object.keys(responseObject);
-                if (keys.length > 0) {
-                  cartData = responseObject[keys[0]]; // Get the first (and likely only) property value
-                }
-              }
+            if (Array.isArray(rawCartData)) {
+              // Direct array response from get_user_cart
+              cartData = rawCartData;
             } else if (typeof rawCartData === 'string') {
               cartData = JSON.parse(rawCartData);
             } else if (rawCartData && typeof rawCartData === 'object') {
-              cartData = rawCartData;
+              // Handle wrapped response format [{"get_user_cart": [...]}]
+              if (Array.isArray(rawCartData) && rawCartData.length > 0 && rawCartData[0].get_user_cart) {
+                cartData = rawCartData[0].get_user_cart;
+              } else {
+                cartData = rawCartData;
+              }
             }
           } catch (parseError) {
-            console.error('🔄 CartContext: Error parsing cart data:', parseError);
+            console.error('CartContext: Error parsing cart data:', parseError);
             cartData = null;
           }
 
@@ -907,26 +906,24 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Parse the returned data from the database function
+      // The RPC function returns JSONB directly (array of cart items)
       let cartData = null;
       try {
-        // The RPC function returns [{"function_name": actual_cart_data}]
-        if (Array.isArray(rawCartData) && rawCartData.length > 0) {
-          const responseObject = rawCartData[0];
-          // Extract the cart data from the response object
-          if (responseObject && typeof responseObject === 'object') {
-            // Find the property that contains the cart data (could be get_user_cart, etc.)
-            const keys = Object.keys(responseObject);
-            if (keys.length > 0) {
-              cartData = responseObject[keys[0]]; // Get the first (and likely only) property value
-            }
-          }
+        if (Array.isArray(rawCartData)) {
+          // Direct array response from get_user_cart
+          cartData = rawCartData;
         } else if (typeof rawCartData === 'string') {
           cartData = JSON.parse(rawCartData);
         } else if (rawCartData && typeof rawCartData === 'object') {
-          cartData = rawCartData;
+          // Handle wrapped response format
+          if (Array.isArray(rawCartData) && rawCartData.length > 0 && rawCartData[0].get_user_cart) {
+            cartData = rawCartData[0].get_user_cart;
+          } else {
+            cartData = rawCartData;
+          }
         }
       } catch (parseError) {
-        console.error('🔄 CartContext: Error parsing restoration data:', parseError);
+        console.error('CartContext: Error parsing restoration data:', parseError);
         cartData = null;
       }
 

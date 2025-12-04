@@ -66,7 +66,7 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
   onNavigateBack,
   preservedState
 }) => {
-  const { staffUsername } = useAuth();
+  const { staffUsername, isSuperUser } = useAuth();
   
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState(preservedState?.searchParams?.searchTerm || '');
@@ -133,41 +133,66 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
     setError(null);
 
     try {
+      let prospectsData: any[] | null = null;
+      let prospectsError: any = null;
 
-      // Get the current user's assigned states from state_xref
-      const { data: assignedStatesData, error: statesError } = await supabase
-        .from('state_xref')
-        .select('state_code')
-        .eq('assigned_staff', staffUsername);
+      // SUPER USERS: Load ALL prospects without state filtering
+      if (isSuperUser) {
+        console.log('Super user detected - loading ALL prospects');
+        const result = await supabase
+          .from('prospector')
+          .select(`
+            *,
+            prospect_activity_log!prospect_activity_log_prospect_website_fkey(
+              activity_type,
+              activity_date,
+              activity_details
+            )
+          `)
+          .order('website');
 
-      if (statesError) {
-        console.error('Error loading assigned states:', statesError);
-        throw statesError;
+        prospectsData = result.data;
+        prospectsError = result.error;
+      } else {
+        // REGULAR USERS: Filter by assigned states
+        // Get the current user's assigned states from state_xref
+        const { data: assignedStatesData, error: statesError } = await supabase
+          .from('state_xref')
+          .select('state_code')
+          .eq('assigned_staff', staffUsername);
+
+        if (statesError) {
+          console.error('Error loading assigned states:', statesError);
+          throw statesError;
+        }
+
+        const assignedStateCodes = assignedStatesData?.map(row => row.state_code) || [];
+
+        // If user has no assigned states, show empty results
+        if (assignedStateCodes.length === 0) {
+          console.warn(`User ${staffUsername} has no assigned states`);
+          setAllProspects([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch prospects with enhanced data - filtered by assigned states
+        const result = await supabase
+          .from('prospector')
+          .select(`
+            *,
+            prospect_activity_log!prospect_activity_log_prospect_website_fkey(
+              activity_type,
+              activity_date,
+              activity_details
+            )
+          `)
+          .in('state', assignedStateCodes)
+          .order('website');
+
+        prospectsData = result.data;
+        prospectsError = result.error;
       }
-
-      const assignedStateCodes = assignedStatesData?.map(row => row.state_code) || [];
-
-      // If user has no assigned states, show empty results
-      if (assignedStateCodes.length === 0) {
-        console.warn(`User ${staffUsername} has no assigned states`);
-        setAllProspects([]);
-        setLoading(false);
-        return;
-      }
-
-      // Fetch prospects with enhanced data - filtered by assigned states
-      const { data: prospectsData, error: prospectsError } = await supabase
-        .from('prospector')
-        .select(`
-          *,
-          prospect_activity_log!prospect_activity_log_prospect_website_fkey(
-            activity_type,
-            activity_date,
-            activity_details
-          )
-        `)
-        .in('state', assignedStateCodes)
-        .order('website');
 
       if (prospectsError) throw prospectsError;
 
@@ -341,7 +366,12 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
       website: prospect.website,
       business_name: prospect.business_name,
       city: prospect.city,
-      phone: prospect.phone
+      state: prospect.state,
+      zip: prospect.zip,
+      phone: prospect.phone,
+      email: prospect.email,
+      contact: prospect.contact,
+      address: prospect.address
     });
     setShowConvertModal(true);
   };
@@ -629,8 +659,8 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
       </div>
 
       {/* Main Data Grid - Full Screen */}
-      <div className="flex-1 px-4 pb-4 overflow-hidden flex flex-col">
-        <div className="bg-white rounded-lg shadow flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 px-4 pb-4 overflow-hidden flex flex-col min-w-0">
+        <div className="bg-white rounded-lg shadow flex-1 flex flex-col overflow-hidden min-w-0">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -646,8 +676,8 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
               </div>
             </div>
           ) : (
-            <div className="overflow-auto flex-1">
-              <table className="min-w-full divide-y divide-gray-200 table-fixed">
+            <div className="overflow-auto flex-1" style={{ maxWidth: '100%' }}>
+              <table className="w-full divide-y divide-gray-200" style={{ minWidth: '1400px' }}>
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
                     <th
