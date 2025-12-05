@@ -33,7 +33,7 @@ interface ProspectData {
   website?: string;
   phone?: string;
   google_review?: number | null;
-
+  
   // Enhanced fields for comprehensive view
   intelligence_status?: string | null;
   ai_grade?: string | null;
@@ -47,15 +47,10 @@ interface ProspectData {
   industry?: string;
   company_size?: string;
   revenue_potential?: number;
-
+  
   // Activity tracking
   recent_activity?: string | null;
   recent_activity_date?: string | null;
-
-  // Conversion tracking
-  converted_account_number?: number | null;
-  converted_at?: string | null;
-  converted_by?: string | null;
 }
 
 interface ProspectsPageProps {
@@ -252,7 +247,7 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
             website: row.website,
             phone: row.phone || '',
             google_review: typeof row.google_review === 'number' ? row.google_review : null,
-
+            
             // Enhanced fields
             intelligence_status: row.intelligence_status || 'idle',
             ai_grade: row.ai_grade || 'Ungraded',
@@ -263,19 +258,14 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
             days_since_contact: daysSinceContact,
             account_progression: accountProgression,
             territory: row.state || 'Unassigned',
-            industry: row.business_name?.includes('Music') ? 'Music' :
-                     row.business_name?.includes('School') ? 'Education' :
+            industry: row.business_name?.includes('Music') ? 'Music' : 
+                     row.business_name?.includes('School') ? 'Education' : 
                      row.business_name?.includes('Church') ? 'Religious' : 'Other',
             company_size: 'Unknown',
             revenue_potential: conversionScore * 100, // Rough estimate
-
+            
             recent_activity: lastActivity?.activity_type || null,
-            recent_activity_date: lastActivity?.activity_date || null,
-
-            // Conversion tracking
-            converted_account_number: row.converted_account_number || null,
-            converted_at: row.converted_at || null,
-            converted_by: row.converted_by || null
+            recent_activity_date: lastActivity?.activity_date || null
           } as ProspectData;
         });
 
@@ -376,12 +366,7 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
       website: prospect.website,
       business_name: prospect.business_name,
       city: prospect.city,
-      state: prospect.state,
-      zip: prospect.zip,
-      phone: prospect.phone,
-      email: prospect.email,
-      contact: prospect.contact,
-      address: prospect.address
+      phone: prospect.phone
     });
     setShowConvertModal(true);
   };
@@ -669,8 +654,8 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
       </div>
 
       {/* Main Data Grid - Full Screen */}
-      <div className="flex-1 px-4 pb-4 overflow-hidden flex flex-col min-w-0">
-        <div className="bg-white rounded-lg shadow flex-1 flex flex-col overflow-hidden min-w-0">
+      <div className="flex-1 px-4 pb-4 overflow-hidden flex flex-col">
+        <div className="bg-white rounded-lg shadow flex-1 flex flex-col overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -686,8 +671,8 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
               </div>
             </div>
           ) : (
-            <div className="overflow-auto flex-1" style={{ maxWidth: '100%' }}>
-              <table className="w-full divide-y divide-gray-200" style={{ minWidth: '1400px' }}>
+            <div className="overflow-x-auto overflow-y-auto flex-1">
+              <table className="min-w-max divide-y divide-gray-200">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
                     <th
@@ -745,26 +730,18 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {displayedProspects.map((prospect) => (
-                    <tr
+                    <tr 
                       key={prospect.id}
-                      className={`hover:bg-gray-50 ${prospect.converted_account_number ? '' : 'cursor-pointer'}`}
-                      onClick={() => !prospect.converted_account_number && handleProspectClick(prospect)}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleProspectClick(prospect)}
                     >
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <Building className={`w-4 h-4 mr-2 ${prospect.converted_account_number ? 'text-red-400' : 'text-gray-400'}`} />
+                          <Building className="w-4 h-4 text-gray-400 mr-2" />
                           <div>
-                            {prospect.converted_account_number ? (
-                              // CONVERTED: Show in RED with account number, NOT clickable
-                              <div className="text-sm font-bold text-red-600">
-                                {prospect.business_name} (Acct {prospect.converted_account_number})
-                              </div>
-                            ) : (
-                              // NOT CONVERTED: Show normal
-                              <div className="text-sm font-medium text-gray-900">
-                                {prospect.business_name}
-                              </div>
-                            )}
+                            <div className="text-sm font-medium text-gray-900">
+                              {prospect.business_name}
+                            </div>
                             <div className="text-sm text-gray-500">
                               {prospect.website}
                             </div>

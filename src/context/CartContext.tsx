@@ -6,20 +6,6 @@ import { logItemAddedToCart, logItemRemovedFromCart, logCheckoutStarted, logChec
 import { activityTracker } from '../services/activityTracker';
 import { logCartActivity, getCartSessionId } from '../utils/performantLogger';
 
-// Exclusive account promo code interface (for converted prospects)
-interface ExclusiveAccountPromo {
-  promo_code: string;
-  discount_percentage: number;
-  min_order_amount: number;
-  max_order_amount: number;
-  max_discount_amount: number;
-  expires_at: string;
-  hours_remaining: number;
-  minutes_remaining: number;
-  account_name: string;
-  created_at: string;
-}
-
 interface ShippingAddress {
   shippingDifferent: boolean;
   shippingAddress?: string;
@@ -63,9 +49,6 @@ interface CartContextType {
   inventoryIssues: { [partnumber: string]: { available: number; requested: number } };
   // NEW: Cancel order with confirmation
   cancelOrderWithConfirmation: () => Promise<boolean>;
-  // NEW: Exclusive account promo (for converted prospects - 25% one-time discount)
-  exclusiveAccountPromo: ExclusiveAccountPromo | null;
-  isExclusivePromoApplied: boolean;
 }
 
 const CartContext = createContext<CartContextType>({
@@ -100,10 +83,7 @@ const CartContext = createContext<CartContextType>({
   dismissCartRestoration: () => {},
   inventoryIssues: {},
   // NEW: Cancel order with confirmation
-  cancelOrderWithConfirmation: async () => false,
-  // NEW: Exclusive account promo (for converted prospects - 25% one-time discount)
-  exclusiveAccountPromo: null,
-  isExclusivePromoApplied: false
+  cancelOrderWithConfirmation: async () => false
 });
 
 export const useCart = () => useContext(CartContext);
@@ -131,26 +111,24 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Cart restoration state
   const [showCartRestorationModal, setShowCartRestorationModal] = useState(false);
   const [inventoryIssues, setInventoryIssues] = useState<{ [partnumber: string]: { available: number; requested: number } }>({});
-
-  // NEW: Exclusive account promo state (for converted prospects - 25% one-time discount)
-  const [exclusiveAccountPromo, setExclusiveAccountPromo] = useState<ExclusiveAccountPromo | null>(null);
-  const [isExclusivePromoApplied, setIsExclusivePromoApplied] = useState(false);
   
   // Save cart to database whenever items change - IMPROVED for critical actions
   useEffect(() => {
     const saveCartToDatabase = async (immediate: boolean = false) => {
-      if (user && user.accountNumber && items.length >= 0) { // Save even empty carts
+      // FIXED: Validate account number is a valid non-empty numeric value before saving
+      const accountNum = user?.accountNumber ? parseInt(user.accountNumber, 10) : NaN;
+      if (user && user.accountNumber && !isNaN(accountNum) && accountNum > 0 && items.length >= 0) { // Save even empty carts
         try {
           const { error } = await supabase.rpc('save_user_cart', {
-            p_account_number: parseInt(user.accountNumber, 10),
+            p_account_number: accountNum,
             p_cart_data: JSON.stringify(items)
           });
-          
+
           if (error) {
-            console.error('CartContext: Error saving cart to database:', error.message);
+            console.warn('CartContext: Error saving cart to database:', error.message);
             return;
           }
-          
+
         } catch (error) {
         }
       }
@@ -181,29 +159,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
           if (error) {
-            console.error('CartContext: Error loading cart from database:', error.message);
             return;
           }
 
           // Parse the returned data from the database function
-          // The RPC function returns JSONB directly (array of cart items)
           let cartData = null;
           try {
-            if (Array.isArray(rawCartData)) {
-              // Direct array response from get_user_cart
-              cartData = rawCartData;
+            // The RPC function returns [{"function_name": actual_cart_data}]
+            if (Array.isArray(rawCartData) && rawCartData.length > 0) {
+              const responseObject = rawCartData[0];
+              // Extract the cart data from the response object
+              if (responseObject && typeof responseObject === 'object') {
+                // Find the property that contains the cart data (could be get_user_cart, etc.)
+                const keys = Object.keys(responseObject);
+                if (keys.length > 0) {
+                  cartData = responseObject[keys[0]]; // Get the first (and likely only) property value
+                }
+              }
             } else if (typeof rawCartData === 'string') {
               cartData = JSON.parse(rawCartData);
             } else if (rawCartData && typeof rawCartData === 'object') {
-              // Handle wrapped response format [{"get_user_cart": [...]}]
-              if (Array.isArray(rawCartData) && rawCartData.length > 0 && rawCartData[0].get_user_cart) {
-                cartData = rawCartData[0].get_user_cart;
-              } else {
-                cartData = rawCartData;
-              }
+              cartData = rawCartData;
             }
           } catch (parseError) {
-            console.error('CartContext: Error parsing cart data:', parseError);
+            console.error('🔄 CartContext: Error parsing cart data:', parseError);
             cartData = null;
           }
 
@@ -228,36 +207,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setShowCartRestorationModal(false);
     }
   }, [user?.accountNumber]); // Trigger when account number changes (login/logout)
-
-  // NEW: Fetch exclusive account promo code when user logs in
-  useEffect(() => {
-    const fetchExclusivePromo = async () => {
-      if (!user || !user.accountNumber) {
-        setExclusiveAccountPromo(null);
-        setIsExclusivePromoApplied(false);
-        return;
-      }
-
-      try {
-        const { data: exclusiveData, error } = await supabase.rpc('get_account_exclusive_promo', {
-          p_account_number: parseInt(user.accountNumber, 10)
-        });
-
-        if (!error && exclusiveData && exclusiveData.length > 0) {
-          console.log('🎉 Found exclusive account promo:', exclusiveData[0]);
-          setExclusiveAccountPromo(exclusiveData[0]);
-        } else {
-          setExclusiveAccountPromo(null);
-          setIsExclusivePromoApplied(false);
-        }
-      } catch (error) {
-        console.error('Error fetching exclusive account promo:', error);
-        setExclusiveAccountPromo(null);
-      }
-    };
-
-    fetchExclusivePromo();
-  }, [user?.accountNumber]);
 
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
   const totalPrice = items.reduce((total, item) => total + ((item.price || 0) * item.quantity), 0);
@@ -356,11 +305,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           // Parse and save the cart snapshot
           const cartItems = JSON.parse(cartSnapshot);
-          if (cartItems && cartItems.length > 0) {
+          const parsedAccountNum = parseInt(lastAccountNumber, 10);
+          // FIXED: Only save if account number is valid
+          if (cartItems && cartItems.length > 0 && !isNaN(parsedAccountNum) && parsedAccountNum > 0) {
             (async () => {
               try {
                 await supabase.rpc('save_user_cart', {
-                  p_account_number: parseInt(lastAccountNumber, 10),
+                  p_account_number: parsedAccountNum,
                   p_cart_data: cartSnapshot // Use the snapshot, not current items
                 });
               } catch (error: any) {
@@ -397,14 +348,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Add browser close/refresh handling to preserve cart
   useEffect(() => {
     const handleBeforeUnload = async (event: BeforeUnloadEvent) => {
-      if (user && user.accountNumber && items.length > 0) {
+      // FIXED: Validate account number before saving
+      const accountNum = user?.accountNumber ? parseInt(user.accountNumber, 10) : NaN;
+      if (user && user.accountNumber && !isNaN(accountNum) && accountNum > 0 && items.length > 0) {
         try {
           // Use sendBeacon for reliable data transmission during page unload
           const cartData = {
-            p_account_number: parseInt(user.accountNumber, 10),
+            p_account_number: accountNum,
             p_cart_data: JSON.stringify(items)
           };
-          
+
           // Try sendBeacon first (most reliable for page unload)
           if (navigator.sendBeacon) {
             const formData = new FormData();
@@ -412,13 +365,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             formData.append('data', JSON.stringify(cartData));
             navigator.sendBeacon('/api/cart-save', formData);
           }
-          
+
           // Fallback: synchronous save (may not complete if page closes too quickly)
           await supabase.rpc('save_user_cart', cartData);
-          
+
           // Log browser close event
           logCartActivity({
-            account_number: parseInt(user.accountNumber, 10),
+            account_number: accountNum,
             cart_session_id: getCartSessionId(),
             activity_type: 'checkout_failed', // Reusing for browser_close
             item_partnumber: 'BROWSER_CLOSED',
@@ -454,74 +407,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const qualifyingSubtotal = items.reduce((total, item) => total + ((item.price || 0) * item.quantity), 0);
   
   // Auto-apply ALL qualifying promo codes when conditions change
-  // PRIORITY: Exclusive account promo (25% one-time) takes precedence over regular promos
   useEffect(() => {
     const autoApplyAllQualifyingPromoCodes = async () => {
-      if (!user || !user.accountNumber || items.length === 0) {
-        // Clear applied promos if no items
+      if (!user || !user.accountNumber || items.length === 0 || availablePromoCodes.length === 0) {
+        // Clear applied promos if no items or no available promos
         setAppliedPromoCodes([]);
         setAutoAppliedPromoItems([]);
-        setIsExclusivePromoApplied(false);
         return;
       }
 
       const newAppliedPromoCodes: PromoCodeValidity[] = [];
       const newPromoItems: CartItem[] = [];
-
-      // PRIORITY CHECK: If exclusive account promo exists, use it EXCLUSIVELY
-      if (exclusiveAccountPromo) {
-        // Check if order qualifies for exclusive promo
-        if (qualifyingSubtotal >= exclusiveAccountPromo.min_order_amount &&
-            qualifyingSubtotal <= exclusiveAccountPromo.max_order_amount) {
-
-          // Calculate the discount (percentage of order, capped at max)
-          const calculatedDiscount = Math.min(
-            qualifyingSubtotal * (exclusiveAccountPromo.discount_percentage / 100),
-            exclusiveAccountPromo.max_discount_amount
-          );
-
-          // Create a PromoCodeValidity for the exclusive promo
-          const exclusivePromoResult: PromoCodeValidity = {
-            is_valid: true,
-            code: exclusiveAccountPromo.promo_code,
-            message: `EXCLUSIVE ${exclusiveAccountPromo.discount_percentage}% OFF - Account #${user.accountNumber} Only`,
-            discount_amount: calculatedDiscount,
-            product_description: `🎉 EXCLUSIVE WELCOME DISCOUNT - ${exclusiveAccountPromo.discount_percentage}% OFF`,
-            is_exclusive_account_promo: true
-          };
-
-          newAppliedPromoCodes.push(exclusivePromoResult);
-
-          // Add as cart line item
-          const exclusivePromoItem: CartItem = {
-            partnumber: exclusiveAccountPromo.promo_code,
-            description: `🎉 EXCLUSIVE ${exclusiveAccountPromo.discount_percentage}% WELCOME DISCOUNT`,
-            price: -calculatedDiscount,
-            quantity: 1,
-            inventory: null,
-            image: undefined
-          };
-          newPromoItems.push(exclusivePromoItem);
-
-          setIsExclusivePromoApplied(true);
-          console.log('🎉 Exclusive account promo auto-applied:', exclusiveAccountPromo.promo_code, 'Discount:', calculatedDiscount);
-
-          // Set and return - exclusive promo replaces all others
-          setAppliedPromoCodes(newAppliedPromoCodes);
-          setAutoAppliedPromoItems(newPromoItems);
-          return;
-        } else {
-          // Order doesn't qualify for exclusive promo (outside min/max range)
-          setIsExclusivePromoApplied(false);
-        }
-      }
-
-      // No exclusive promo or doesn't qualify - fall back to regular promos
-      if (availablePromoCodes.length === 0) {
-        setAppliedPromoCodes([]);
-        setAutoAppliedPromoItems([]);
-        return;
-      }
 
       // Process each available promo code
       for (const availablePromo of availablePromoCodes) {
@@ -529,10 +425,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (qualifyingSubtotal >= availablePromo.min_order_value) {
           try {
             const result = await applyPromoCode(availablePromo.code, true);
-
+            
             if (result.is_valid) {
               newAppliedPromoCodes.push(result);
-
+              
               // Add promo as a cart line item
               if (result.code && result.discount_amount && result.discount_amount > 0) {
                 const promoItem: CartItem = {
@@ -559,7 +455,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Add delay to ensure cart state is stable before applying promos
     const timeoutId = setTimeout(autoApplyAllQualifyingPromoCodes, 1000);
     return () => clearTimeout(timeoutId);
-  }, [availablePromoCodes, qualifyingSubtotal, user?.accountNumber, items.length, exclusiveAccountPromo]);
+  }, [availablePromoCodes, qualifyingSubtotal, user?.accountNumber, items.length]);
 
   const addToCart = (product: Product, quantity: number = 1) => {
     
@@ -1017,24 +913,26 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Parse the returned data from the database function
-      // The RPC function returns JSONB directly (array of cart items)
       let cartData = null;
       try {
-        if (Array.isArray(rawCartData)) {
-          // Direct array response from get_user_cart
-          cartData = rawCartData;
+        // The RPC function returns [{"function_name": actual_cart_data}]
+        if (Array.isArray(rawCartData) && rawCartData.length > 0) {
+          const responseObject = rawCartData[0];
+          // Extract the cart data from the response object
+          if (responseObject && typeof responseObject === 'object') {
+            // Find the property that contains the cart data (could be get_user_cart, etc.)
+            const keys = Object.keys(responseObject);
+            if (keys.length > 0) {
+              cartData = responseObject[keys[0]]; // Get the first (and likely only) property value
+            }
+          }
         } else if (typeof rawCartData === 'string') {
           cartData = JSON.parse(rawCartData);
         } else if (rawCartData && typeof rawCartData === 'object') {
-          // Handle wrapped response format
-          if (Array.isArray(rawCartData) && rawCartData.length > 0 && rawCartData[0].get_user_cart) {
-            cartData = rawCartData[0].get_user_cart;
-          } else {
-            cartData = rawCartData;
-          }
+          cartData = rawCartData;
         }
       } catch (parseError) {
-        console.error('CartContext: Error parsing restoration data:', parseError);
+        console.error('🔄 CartContext: Error parsing restoration data:', parseError);
         cartData = null;
       }
 
@@ -1314,16 +1212,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       totalItems, totalPrice, placeOrder,
       applyPromoCode, removePromoCode, appliedPromoCode,
       availablePromoCodes, fetchAvailablePromoCodes, isLoadingPromoCodes,
-      isPromoCodeAutoApplied,
+      isPromoCodeAutoApplied, 
       // NEW: Auto-applied promo functionality
       appliedPromoCodes, autoAppliedPromoItems, qualifyingSubtotal,
       isCartReady,
       showCartRestorationModal, restoreCartFromDatabase, dismissCartRestoration, inventoryIssues,
       // NEW: Cancel order with confirmation
-      cancelOrderWithConfirmation,
-      // NEW: Exclusive account promo (for converted prospects - 25% one-time discount)
-      exclusiveAccountPromo,
-      isExclusivePromoApplied
+      cancelOrderWithConfirmation
     }}>
       {children}
     </CartContext.Provider>

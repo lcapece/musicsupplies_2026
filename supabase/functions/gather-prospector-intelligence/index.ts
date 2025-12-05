@@ -40,7 +40,6 @@ serve(async (req) => {
         .from('prospector')
         .select('homepage_screenshot_url')
         .eq('website', website)
-        .eq('round_number', 1)
         .single()
       screenshotUrl = existingData?.homepage_screenshot_url
       console.log(`📸 Using existing screenshot: ${screenshotUrl ? 'Found' : 'None available'}`)
@@ -56,7 +55,6 @@ serve(async (req) => {
         last_intelligence_gather: new Date().toISOString()
       })
       .eq('website', website)
-      .eq('round_number', 1)
 
     // Tavily research
     console.log('🔍 Starting Tavily research...')
@@ -132,12 +130,11 @@ serve(async (req) => {
     // Update status to generating
     await supabaseClient
       .from('prospector')
-      .update({ 
+      .update({
         intelligence_status: 'generating',
         tavily_research_data: tavilyData
       })
       .eq('website', website)
-      .eq('round_number', 1)
 
     // CRITICAL FIX 2: Generate authentic icebreakers based on screenshot analysis
     console.log('🤖 Starting OpenAI analysis with screenshot focus...')
@@ -476,7 +473,6 @@ Instagram: [Instagram URL or @handle from screenshot, or "Not found"]
         last_intelligence_gather: new Date().toISOString()
       })
       .eq('website', website)
-      .eq('round_number', 1)
 
     if (updateError) {
       throw updateError
@@ -518,7 +514,6 @@ Instagram: [Instagram URL or @handle from screenshot, or "Not found"]
           .from('prospector')
           .update({ intelligence_status: 'error' })
           .eq('website', website)
-          .eq('round_number', 1)
       }
     } catch (updateError) {
       console.error('Failed to update error status:', updateError)

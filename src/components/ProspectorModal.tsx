@@ -85,12 +85,20 @@ const ProspectorModal: React.FC<ProspectorModalProps> = ({ isOpen, onClose, webs
     setErr(null);
     setMsg(null);
     try {
+      // Use maybeSingle() instead of single() to handle 0 or 1 rows gracefully
       const { data, error } = await supabase
         .from('prospector')
         .select('website, business_name, city, phone, email, facebook_page, instagram_page, homepage_screenshot_url, intelligence_status, last_intelligence_gather, ai_markdown, icebreakers, ai_grade, ai_grade_reason, ai_music_focus')
         .eq('website', website)
-        .single();
+        .maybeSingle();
       if (error) throw error;
+
+      // If no record found, show a clearer message
+      if (!data) {
+        setErr(`No prospect found with website: ${website}`);
+        setLoading(false);
+        return;
+      }
       
       // CRITICAL FIX: Generate screenshot URL from Supabase Storage if not already set
       if (data && !data.homepage_screenshot_url) {
@@ -137,7 +145,7 @@ const ProspectorModal: React.FC<ProspectorModalProps> = ({ isOpen, onClose, webs
           .from('prospector')
           .select('website, business_name, city, phone, homepage_screenshot_url, intelligence_status, last_intelligence_gather, ai_markdown, icebreakers, ai_grade, ai_grade_reason, ai_music_focus')
           .eq('website', website as string)
-          .single();
+          .maybeSingle();
         if (data) {
           // CRITICAL FIX: Generate screenshot URL from Supabase Storage if not already set
           if (!data.homepage_screenshot_url) {
