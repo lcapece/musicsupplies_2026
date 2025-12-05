@@ -82,7 +82,7 @@ exports.handler = async (event) => {
     console.log('Current MAX account_number:', currentMax || 'NULL (table empty)');
     console.log('Next account number to insert:', nextAccountNumber);
 
-    // Prepare account data
+    // Prepare account data - only columns that exist in accounts_lcmd table
     const accountData = {
       account_number: nextAccountNumber,
       acct_name: body.acct_name || '',
@@ -94,30 +94,29 @@ exports.handler = async (event) => {
       mobile_phone: body.mobile_phone || '',
       email_address: body.email_address || '',
       contact: body.contact || '',
-      website: body.website || '',
       salesman: body.salesman || '',
       terms: body.terms || 'NET30',
-      status: 'ACTIVE'
+      sms_consent: false
     };
 
-    // Insert into SQL Server
+    // Insert into SQL Server - using only columns that exist in accounts_lcmd
     const insertQuery = `
       INSERT INTO accounts_lcmd (
         account_number, acct_name, address, city, state, zip,
-        phone, mobile_phone, email_address, contact, website,
-        salesman, terms, status, dstamp, inserted_at, updated_at
+        phone, mobile_phone, email_address, contact,
+        salesman, terms, sms_consent
       ) VALUES (
         @account_number, @acct_name, @address, @city, @state, @zip,
-        @phone, @mobile_phone, @email_address, @contact, @website,
-        @salesman, @terms, @status, GETDATE(), GETDATE(), GETDATE()
+        @phone, @mobile_phone, @email_address, @contact,
+        @salesman, @terms, @sms_consent
       )
     `;
 
     console.log('Executing insert...');
     const request = pool.request();
 
-    // Add parameters
-    request.input('account_number', sql.BigInt, accountData.account_number);
+    // Add parameters - matching actual table columns
+    request.input('account_number', sql.Int, accountData.account_number);
     request.input('acct_name', sql.NVarChar, accountData.acct_name);
     request.input('address', sql.NVarChar, accountData.address);
     request.input('city', sql.NVarChar, accountData.city);
@@ -127,10 +126,9 @@ exports.handler = async (event) => {
     request.input('mobile_phone', sql.NVarChar, accountData.mobile_phone);
     request.input('email_address', sql.NVarChar, accountData.email_address);
     request.input('contact', sql.NVarChar, accountData.contact);
-    request.input('website', sql.NVarChar, accountData.website);
     request.input('salesman', sql.NVarChar, accountData.salesman);
     request.input('terms', sql.NVarChar, accountData.terms);
-    request.input('status', sql.NVarChar, accountData.status);
+    request.input('sms_consent', sql.Bit, accountData.sms_consent);
 
     const result = await request.query(insertQuery);
     console.log('Insert result:', result);

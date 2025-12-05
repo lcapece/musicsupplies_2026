@@ -33,7 +33,7 @@ interface ProspectData {
   website?: string;
   phone?: string;
   google_review?: number | null;
-  
+
   // Enhanced fields for comprehensive view
   intelligence_status?: string | null;
   ai_grade?: string | null;
@@ -47,10 +47,15 @@ interface ProspectData {
   industry?: string;
   company_size?: string;
   revenue_potential?: number;
-  
+
   // Activity tracking
   recent_activity?: string | null;
   recent_activity_date?: string | null;
+
+  // Conversion tracking
+  converted_account_number?: number | null;
+  converted_at?: string | null;
+  converted_by?: string | null;
 }
 
 interface ProspectsPageProps {
@@ -247,7 +252,7 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
             website: row.website,
             phone: row.phone || '',
             google_review: typeof row.google_review === 'number' ? row.google_review : null,
-            
+
             // Enhanced fields
             intelligence_status: row.intelligence_status || 'idle',
             ai_grade: row.ai_grade || 'Ungraded',
@@ -258,14 +263,19 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
             days_since_contact: daysSinceContact,
             account_progression: accountProgression,
             territory: row.state || 'Unassigned',
-            industry: row.business_name?.includes('Music') ? 'Music' : 
-                     row.business_name?.includes('School') ? 'Education' : 
+            industry: row.business_name?.includes('Music') ? 'Music' :
+                     row.business_name?.includes('School') ? 'Education' :
                      row.business_name?.includes('Church') ? 'Religious' : 'Other',
             company_size: 'Unknown',
             revenue_potential: conversionScore * 100, // Rough estimate
-            
+
             recent_activity: lastActivity?.activity_type || null,
-            recent_activity_date: lastActivity?.activity_date || null
+            recent_activity_date: lastActivity?.activity_date || null,
+
+            // Conversion tracking
+            converted_account_number: row.converted_account_number || null,
+            converted_at: row.converted_at || null,
+            converted_by: row.converted_by || null
           } as ProspectData;
         });
 
@@ -735,18 +745,26 @@ const ProspectsPage: React.FC<ProspectsPageProps> = ({
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {displayedProspects.map((prospect) => (
-                    <tr 
+                    <tr
                       key={prospect.id}
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => handleProspectClick(prospect)}
+                      className={`hover:bg-gray-50 ${prospect.converted_account_number ? '' : 'cursor-pointer'}`}
+                      onClick={() => !prospect.converted_account_number && handleProspectClick(prospect)}
                     >
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <Building className="w-4 h-4 text-gray-400 mr-2" />
+                          <Building className={`w-4 h-4 mr-2 ${prospect.converted_account_number ? 'text-red-400' : 'text-gray-400'}`} />
                           <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {prospect.business_name}
-                            </div>
+                            {prospect.converted_account_number ? (
+                              // CONVERTED: Show in RED with account number, NOT clickable
+                              <div className="text-sm font-bold text-red-600">
+                                {prospect.business_name} (Acct {prospect.converted_account_number})
+                              </div>
+                            ) : (
+                              // NOT CONVERTED: Show normal
+                              <div className="text-sm font-medium text-gray-900">
+                                {prospect.business_name}
+                              </div>
+                            )}
                             <div className="text-sm text-gray-500">
                               {prospect.website}
                             </div>

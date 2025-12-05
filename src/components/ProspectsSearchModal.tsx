@@ -42,6 +42,11 @@ interface EntityResult {
   // Activity tracking
   recent_activity?: string | null;
   recent_activity_date?: string | null;
+
+  // Conversion tracking
+  converted_account_number?: number | null;
+  converted_at?: string | null;
+  converted_by?: string | null;
 }
 
 interface ProspectsSearchModalProps {
@@ -520,7 +525,11 @@ const ProspectsSearchModal: React.FC<ProspectsSearchModalProps> = ({
             intelligence_status: row.intelligence_status || null,
             ai_grade: row.ai_grade || null,
             recent_activity: recentActivity,
-            recent_activity_date: recentActivityDate
+            recent_activity_date: recentActivityDate,
+            // Conversion tracking fields
+            converted_account_number: row.converted_account_number || null,
+            converted_at: row.converted_at || null,
+            converted_by: row.converted_by || null
           } as EntityResult;
         });
 
@@ -1183,13 +1192,23 @@ const ProspectsSearchModal: React.FC<ProspectsSearchModalProps> = ({
                                   className={`${isDoNotSell ? 'bg-yellow-50' : 'bg-white'} hover:bg-green-50 transition-colors`}
                                 >
                                   <td
-                                    className="px-3 py-0.5 border border-gray-300 align-top cursor-pointer overflow-hidden"
+                                    className={`px-3 py-0.5 border border-gray-300 align-top overflow-hidden ${
+                                      prospect.converted_account_number ? '' : 'cursor-pointer'
+                                    }`}
                                     style={{ width: `${columnWidths.business_name}px` }}
-                                    onClick={() => handleProspectClick(prospect)}
+                                    onClick={() => !prospect.converted_account_number && handleProspectClick(prospect)}
                                   >
-                                    <span className="text-blue-600 underline font-semibold truncate block" style={{ fontSize: '0.75rem' }}>
-                                      {prospect.business_name}
-                                    </span>
+                                    {prospect.converted_account_number ? (
+                                      // CONVERTED: Show in RED with account number, NOT clickable
+                                      <span className="text-red-600 font-bold truncate block" style={{ fontSize: '0.75rem' }}>
+                                        {prospect.business_name} (Acct {prospect.converted_account_number})
+                                      </span>
+                                    ) : (
+                                      // NOT CONVERTED: Show in blue, clickable
+                                      <span className="text-blue-600 underline font-semibold truncate block" style={{ fontSize: '0.75rem' }}>
+                                        {prospect.business_name}
+                                      </span>
+                                    )}
                                   </td>
                                   <td
                                     className="px-1 py-0.5 border border-gray-300 align-top"

@@ -1,8 +1,10 @@
 /**
- * Account Creation API Client
+ * Account Creation - Direct Supabase Insert
  *
- * Calls AWS API Gateway → Lambda → SQL Server to create new accounts
+ * Creates accounts directly in the Supabase accounts_lcmd table
  */
+
+import { supabase } from './supabase';
 
 export interface CreateAccountRequest {
   acct_name: string;
@@ -33,45 +35,72 @@ export interface CreateAccountResponse {
 }
 
 /**
- * Create a new account in SQL Server master database
+ * Create a new account directly in Supabase accounts_lcmd table
  */
 export async function createAccountInSQLServer(
   data: CreateAccountRequest
 ): Promise<CreateAccountResponse> {
-  // Use Netlify Function endpoint (no env var needed!)
-  const apiEndpoint = '/api/create-sql-account';
-
-  // Fallback to AWS Lambda if configured
-  const customEndpoint = import.meta.env.VITE_CREATE_ACCOUNT_API;
-  const endpoint = customEndpoint || apiEndpoint;
-
-
   try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    // Step 1: Get the next account number
+    const { data: maxData, error: maxError } = await supabase
+      .from('accounts_lcmd')
+      .select('account_number')
+      .order('account_number', { ascending: false })
+      .limit(1);
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error || `HTTP ${response.status}: ${response.statusText}`
-      );
+    if (maxError) {
+      console.error('Error fetching max account number:', maxError);
+      throw new Error('Failed to get next account number: ' + maxError.message);
     }
 
-    const result: CreateAccountResponse = await response.json();
+    const currentMax = maxData && maxData.length > 0
+      ? parseInt(maxData[0].account_number)
+      : 10000;
+    const nextAccountNumber = currentMax + 1;
 
-    if (!result.success) {
-      throw new Error(result.error || 'Unknown error occurred');
+    console.log('Current MAX account_number:', currentMax);
+    console.log('Next account number to insert:', nextAccountNumber);
+
+    // Step 2: Insert the new account into Supabase
+    const { data: insertedData, error: insertError } = await supabase
+      .from('accounts_lcmd')
+      .insert({
+        account_number: nextAccountNumber,
+        acct_name: data.acct_name || '',
+        address: data.address || '',
+        city: data.city || '',
+        state: data.state || '',
+        zip: data.zip || '',
+        phone: data.phone || '',
+        mobile_phone: data.mobile_phone || '',
+        email_address: data.email_address || '',
+        contact: data.contact || '',
+        salesman: data.salesman || '',
+        terms: data.terms || 'NET30',
+        sms_consent: false
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Error inserting account:', insertError);
+      throw new Error('Failed to create account: ' + insertError.message);
     }
 
-    return result;
+    console.log('Account created successfully:', insertedData);
+
+    return {
+      success: true,
+      account_number: nextAccountNumber,
+      message: 'Account created successfully',
+      data: {
+        account_number: nextAccountNumber,
+        acct_name: data.acct_name
+      }
+    };
 
   } catch (error) {
-    console.error('Error creating account in SQL Server:', error);
+    console.error('Error creating account:', error);
 
     if (error instanceof Error) {
       return {

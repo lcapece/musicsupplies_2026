@@ -126,6 +126,7 @@ export interface PromoCodeValidity {
   discount_amount?: number;
   code?: string; // Added for actual promo code (e.g., "SAVE10")
   product_description?: string; // Added for description from products table
+  is_exclusive_account_promo?: boolean; // Flag for exclusive account promo (25% one-time for converted prospects)
 }
 
 export interface PromoCodeSummary {

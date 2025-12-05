@@ -41,6 +41,26 @@ interface SuccessData {
   promoExpires?: string;
 }
 
+// CSS for slow pulsating red animation on empty mandatory fields
+const pulseRedStyle = `
+  @keyframes pulseRed {
+    0%, 100% {
+      border-color: rgb(239 68 68);
+      background-color: rgb(254 242 242);
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    50% {
+      border-color: rgb(185 28 28);
+      background-color: rgb(254 226 226);
+      box-shadow: 0 0 8px 2px rgba(239, 68, 68, 0.3);
+    }
+  }
+  .pulse-red-empty {
+    animation: pulseRed 2s ease-in-out infinite;
+    border-width: 2px;
+  }
+`;
+
 const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
   isOpen,
   onClose,
@@ -68,6 +88,20 @@ const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
     contact: ''
   });
 
+  // Helper to get input class - pulses red if empty mandatory field
+  const getMandatoryInputClass = (fieldName: keyof typeof formData, value: string) => {
+    const baseClass = 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500';
+    const isEmpty = !value.trim();
+
+    if (isEmpty) {
+      return `${baseClass} pulse-red-empty`;
+    }
+    if (validationErrors[fieldName as keyof ValidationErrors]) {
+      return `${baseClass} border-red-500 bg-red-50`;
+    }
+    return `${baseClass} border-gray-300`;
+  };
+
   // Fetch next account number and populate form when modal opens
   useEffect(() => {
     if (isOpen && prospectData) {
@@ -83,10 +117,10 @@ const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
     if (!prospectData?.website) return;
 
     try {
-      // Fetch full prospect data from Supabase
+      // Fetch full prospect data from Supabase - use * to get all available columns
       const { data, error: fetchError } = await supabase
         .from('prospector')
-        .select('website, business_name, city, state, zip, phone, email, contact, address')
+        .select('*')
         .eq('website', prospectData.website)
         .single();
 
@@ -107,31 +141,32 @@ const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
         return;
       }
 
-      // Populate form with full prospect data
+      // Populate form with full prospect data - use actual values, not placeholders
+      // Note: prospector table may have 'email' or no email column at all
       setFormData({
         acct_name: data?.business_name || prospectData.business_name || '',
-        address: data?.address || '',
+        address: data?.address || prospectData.address || '',
         city: data?.city || prospectData.city || '',
-        state: data?.state || '',
-        zip: data?.zip || '',
+        state: data?.state || prospectData.state || '',
+        zip: data?.zip || prospectData.zip || '',
         phone: data?.phone || prospectData.phone || '',
-        email_address: data?.email || '',
-        mobile_phone: '',
-        contact: data?.contact || ''
+        email_address: data?.email || data?.email_address || prospectData.email || '',
+        mobile_phone: data?.mobile_phone || '',
+        contact: data?.contact || prospectData.contact || ''
       });
     } catch (err) {
       console.error('Error fetching prospect data:', err);
-      // Fall back to provided data
+      // Fall back to provided data - populate all available fields
       setFormData({
         acct_name: prospectData.business_name || '',
-        address: '',
+        address: prospectData.address || '',
         city: prospectData.city || '',
-        state: '',
-        zip: '',
+        state: prospectData.state || '',
+        zip: prospectData.zip || '',
         phone: prospectData.phone || '',
-        email_address: '',
+        email_address: prospectData.email || '',
         mobile_phone: '',
-        contact: ''
+        contact: prospectData.contact || ''
       });
     }
   };
@@ -290,6 +325,48 @@ const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
         } catch (logError) {
           console.warn('Failed to log conversion activity:', logError);
         }
+
+        // CRITICAL: Insert into prospect_conversions table for tracking
+        try {
+          await supabase
+            .from('prospect_conversions')
+            .insert({
+              prospect_website: prospectData.website,
+              prospect_business_name: formData.acct_name.trim(),
+              prospect_city: formData.city.trim(),
+              prospect_state: formData.state.trim().toUpperCase(),
+              prospect_zip: formData.zip.trim(),
+              prospect_phone: formData.phone.trim(),
+              prospect_email: formData.email_address.trim() || null,
+              account_number: parseInt(accountNumber),
+              converted_by: staffUsername || 'Unknown',
+              promo_code: promoData?.code || null,
+              promo_discount_percent: promoData ? 25 : null,
+              promo_max_discount: promoData ? 250.00 : null,
+              promo_expires_at: promoData?.expires || null,
+              conversion_notes: `Converted from prospect by ${staffUsername || 'Unknown'}`
+            });
+          console.log('✅ Conversion tracked in prospect_conversions table');
+        } catch (conversionLogError) {
+          console.error('Failed to log conversion to prospect_conversions:', conversionLogError);
+          // Don't throw - this is a tracking feature, not critical to the conversion
+        }
+
+        // Update the prospector table to mark as converted with account number
+        try {
+          await supabase
+            .from('prospector')
+            .update({
+              status: 'CONVERTED ACCT',
+              converted_account_number: parseInt(accountNumber),
+              converted_at: new Date().toISOString(),
+              converted_by: staffUsername || 'Unknown'
+            })
+            .eq('website', prospectData.website);
+          console.log('✅ Prospector record updated with conversion status');
+        } catch (updateError) {
+          console.warn('Failed to update prospector status:', updateError);
+        }
       }
 
       // Show success modal with account details
@@ -341,83 +418,79 @@ const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
   if (showSuccessModal && successData) {
     return (
       <div className="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
-          {/* Success Header */}
-          <div className="bg-gradient-to-r from-green-500 to-green-600 px-6 py-8 text-white text-center">
-            <CheckCircle className="w-16 h-16 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold">Account Created!</h2>
+        {/* Inject pulse animation styles */}
+        <style>{pulseRedStyle}</style>
+        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden max-h-[85vh] overflow-y-auto">
+          {/* Success Header - Compact */}
+          <div className="bg-gradient-to-r from-green-500 to-green-600 px-4 py-4 text-white text-center">
+            <CheckCircle className="w-10 h-10 mx-auto mb-2" />
+            <h2 className="text-2xl font-bold">Account Created!</h2>
           </div>
 
-          {/* Account Details */}
-          <div className="p-6 space-y-6">
-            {/* Main Info Box */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 rounded-xl p-6 text-center">
-              <p className="text-sm text-blue-600 font-semibold uppercase tracking-wide mb-2">
+          {/* Account Details - Compact */}
+          <div className="p-4 space-y-3">
+            {/* Main Info Box - Compact */}
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 rounded-xl p-4 text-center">
+              <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-1">
                 New Account Number
               </p>
-              <p className="text-5xl font-bold text-blue-800 font-mono mb-4">
+              <p className="text-4xl font-bold text-blue-800 font-mono mb-2">
                 {successData.accountNumber}
               </p>
 
-              <div className="border-t border-blue-200 pt-4 mt-4">
-                <p className="text-sm text-blue-600 font-semibold mb-1">Customer Name</p>
-                <p className="text-xl font-bold text-blue-800">{successData.acctName}</p>
-              </div>
-
-              <div className="border-t border-blue-200 pt-4 mt-4">
-                <p className="text-sm text-blue-600 font-semibold mb-1">ZIP Code (Password)</p>
-                <p className="text-3xl font-bold text-blue-800 font-mono">{successData.zip}</p>
-              </div>
-            </div>
-
-            {/* Instructions for salesman */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-amber-800">
-                  <p className="font-bold mb-2">Tell the customer:</p>
-                  <p>"You can now log into our website using:</p>
-                  <ul className="list-disc list-inside mt-1 ml-2 space-y-1">
-                    <li>Account Number: <strong>{successData.accountNumber}</strong></li>
-                    <li>Password: <strong>{successData.zip}</strong> (your ZIP code)</li>
-                  </ul>
+              <div className="border-t border-blue-200 pt-2 mt-2 grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-xs text-blue-600 font-semibold">Customer Name</p>
+                  <p className="text-sm font-bold text-blue-800 truncate">{successData.acctName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-blue-600 font-semibold">ZIP Code (Password)</p>
+                  <p className="text-xl font-bold text-blue-800 font-mono">{successData.zip}</p>
                 </div>
               </div>
             </div>
 
-            {/* Promo Code Section (if enabled) */}
+            {/* Instructions for salesman - Compact */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-amber-800">
+                  <p className="font-bold mb-1">Tell the customer:</p>
+                  <p>"Log in with Account #: <strong>{successData.accountNumber}</strong> | Password: <strong>{successData.zip}</strong>"</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Promo Code Section (if enabled) - Compact */}
             {successData.promoCode && (
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-xl p-5">
-                <div className="flex items-center justify-center gap-2 mb-3">
-                  <Gift className="w-6 h-6 text-purple-600" />
-                  <span className="text-lg font-bold text-purple-800">Special Welcome Discount!</span>
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-xl p-3">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Gift className="w-5 h-5 text-purple-600" />
+                  <span className="text-sm font-bold text-purple-800">Special Welcome Discount!</span>
                 </div>
 
-                <div className="bg-white rounded-lg p-4 text-center border border-purple-200">
-                  <p className="text-sm text-purple-600 font-semibold mb-1">Promo Code</p>
-                  <p className="text-4xl font-bold text-purple-800 font-mono tracking-wider">
+                <div className="bg-white rounded-lg p-2 text-center border border-purple-200">
+                  <p className="text-xs text-purple-600 font-semibold">Promo Code</p>
+                  <p className="text-2xl font-bold text-purple-800 font-mono tracking-wider">
                     {successData.promoCode}
                   </p>
                 </div>
 
-                <div className="mt-4 text-sm text-purple-700 space-y-1">
-                  <p><strong>25% OFF</strong> site-wide (up to $250 savings)</p>
-                  <p><strong>Minimum order:</strong> $100</p>
-                  <p><strong>Maximum order:</strong> $1,000</p>
-                  <p><strong>Valid for:</strong> 24 hours only</p>
-                  <p className="text-xs text-purple-500 mt-2">
-                    * This code ONLY works for Account #{successData.accountNumber}
-                  </p>
+                <div className="mt-2 text-xs text-purple-700 grid grid-cols-2 gap-1">
+                  <p><strong>25% OFF</strong> (up to $250)</p>
+                  <p><strong>Min:</strong> $100 | <strong>Max:</strong> $1,000</p>
+                  <p><strong>Valid:</strong> 24 hours only</p>
+                  <p className="text-purple-500">* Account #{successData.accountNumber} only</p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 bg-gray-50 border-t">
+          {/* Footer - Compact */}
+          <div className="px-4 py-3 bg-gray-50 border-t">
             <button
               onClick={handleSuccessModalClose}
-              className="w-full px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-bold text-lg rounded-lg shadow transition-all"
+              className="w-full px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-base rounded-lg shadow transition-all"
             >
               OK - Close
             </button>
@@ -430,6 +503,8 @@ const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
   // Main Convert Form
   return (
     <div className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      {/* Inject pulse animation styles */}
+      <style>{pulseRedStyle}</style>
       <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-600 to-orange-800 px-6 py-4 text-white flex items-center justify-between">
@@ -484,9 +559,7 @@ const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
                   type="text"
                   value={formData.acct_name}
                   onChange={(e) => handleInputChange('acct_name', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
-                    validationErrors.acct_name ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={getMandatoryInputClass('acct_name', formData.acct_name)}
                   placeholder="Enter business name"
                   disabled={loading}
                 />
@@ -519,9 +592,7 @@ const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
                   type="text"
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
-                    validationErrors.address ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={getMandatoryInputClass('address', formData.address)}
                   placeholder="123 Main Street"
                   disabled={loading}
                 />
@@ -539,9 +610,7 @@ const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
                   type="text"
                   value={formData.city}
                   onChange={(e) => handleInputChange('city', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
-                    validationErrors.city ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={getMandatoryInputClass('city', formData.city)}
                   placeholder="City"
                   disabled={loading}
                 />
@@ -559,9 +628,7 @@ const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
                   type="text"
                   value={formData.state}
                   onChange={(e) => handleInputChange('state', e.target.value.toUpperCase())}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
-                    validationErrors.state ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={getMandatoryInputClass('state', formData.state)}
                   placeholder="CA"
                   maxLength={2}
                   disabled={loading}
@@ -580,9 +647,7 @@ const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
                   type="text"
                   value={formData.zip}
                   onChange={(e) => handleInputChange('zip', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
-                    validationErrors.zip ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={getMandatoryInputClass('zip', formData.zip)}
                   placeholder="90210"
                   disabled={loading}
                 />
@@ -600,9 +665,7 @@ const ConvertToAccountModal: React.FC<ConvertToAccountModalProps> = ({
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
-                    validationErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={getMandatoryInputClass('phone', formData.phone)}
                   placeholder="(555) 123-4567"
                   disabled={loading}
                 />
